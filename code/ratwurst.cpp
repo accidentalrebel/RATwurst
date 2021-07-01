@@ -28,12 +28,14 @@ WinMain(HINSTANCE hInstance,
 
 	struct sockaddr_in socketAddress;
     socketAddress.sin_family = AF_INET;
-	socketAddress.sin_port = 65432;
+	socketAddress.sin_port = htons(65432);
 	socketAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	if ( connect(socketConnection, (SOCKADDR*) &socketAddress, sizeof(socketAddress)) == SOCKET_ERROR )
 	{
-		OutputDebugStringA("Error with connecting to socket.");
+		char buffer[256];
+		sprintf(buffer, "Socket failed with error: %ld\n", WSAGetLastError());
+		OutputDebugStringA(buffer);
 	}
 	
 	const char* socketBuffer = "This is a test.";
