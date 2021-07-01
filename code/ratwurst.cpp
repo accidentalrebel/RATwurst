@@ -2,14 +2,9 @@
 #include <Windows.h>
 #include <stdio.h>
 
-#define _SOCKET(name) SOCKET WSAAPI name(int af, int type, int protocol);
-typedef _SOCKET(_socket);
-
-#define _CONNECT(name) int WSAAPI name(SOCKET s, const sockaddr *name, int namelen);
-typedef _CONNECT(_connect);
-
-#define _SEND(name) int WSAAPI name(SOCKET s, const char *buf, int len, int flags);
-typedef _SEND(_send);
+typedef SOCKET WSAAPI _socket(int af, int type, int protocol);
+typedef int WSAAPI _connect(SOCKET s, const sockaddr *name, int namelen);
+typedef int WSAAPI _send(SOCKET s, const char *buf, int len, int flags);
 
 int CALLBACK
 WinMain(HINSTANCE hInstance,
