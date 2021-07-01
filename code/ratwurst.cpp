@@ -2,12 +2,22 @@
 #include <Windows.h>
 #include <stdio.h>
 
+#define _SOCKET(name) SOCKET WSAAPI name(int af, int type, int protocol);
+typedef _SOCKET(_socket);
+
 int CALLBACK
 WinMain(HINSTANCE hInstance,
 		HINSTANCE hPrevInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
+	HMODULE libraryWinsock2 = LoadLibraryA("Ws2_32.dll");
+	if ( !libraryWinsock2 )
+	{
+		OutputDebugStringA("Loading libraryWinsock2 failed.");
+		return 1;
+	}
+	
 	WSADATA wsaData;
     if ( WSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR ) {
 		OutputDebugStringA("WSAStartup failed.");
@@ -15,7 +25,9 @@ WinMain(HINSTANCE hInstance,
     }
 
 	SOCKET socketConnection;
-	socketConnection = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+	_socket* fSocket = (_socket*)GetProcAddress(libraryWinsock2, "socket");
+	socketConnection = fSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if ( socketConnection == INVALID_SOCKET )
 	{	
 		char buffer[256];
@@ -34,8 +46,13 @@ WinMain(HINSTANCE hInstance,
 	if ( connect(socketConnection, (SOCKADDR*) &socketAddress, sizeof(socketAddress)) == SOCKET_ERROR )
 	{
 		char buffer[256];
-		sprintf(buffer, "Socket failed with error: %ld\n", WSAGetLastError());
+		sprintf(buffer, "Socket failed with error: %ld\nReconnecting...", WSAGetLastError());
 		OutputDebugStringA(buffer);
+
+		// Try to reconnect
+		closesocket(socketConnection);
+		WSACleanup();
+		Sleep(2000);
 	}
 	
 	const char* socketBuffer = "THIS IS A TEST.";
