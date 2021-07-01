@@ -2,6 +2,9 @@
 #include <Windows.h>
 #include <stdio.h>
 
+// Ws2_32.dll definitions
+#define WSAAPI FAR PASCAL
+typedef UINT_PTR SOCKET;
 typedef SOCKET WSAAPI _socket(int af, int type, int protocol);
 typedef int WSAAPI _connect(SOCKET s, const sockaddr *name, int namelen);
 typedef int WSAAPI _send(SOCKET s, const char *buf, int len, int flags);
