@@ -17,7 +17,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     with conn:
         print('Connected by' + str(addr))
         while True:
-            data = conn.recv(15)
+            data = conn.recv(256)
             print("Got data: " + str(data));
             if not data:
                 break
