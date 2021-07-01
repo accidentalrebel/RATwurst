@@ -3,11 +3,15 @@
 #include <stdio.h>
 
 // Ws2_32.dll definitions
-#define WSAAPI FAR PASCAL
-typedef UINT_PTR SOCKET;
 typedef SOCKET WSAAPI _socket(int af, int type, int protocol);
 typedef int WSAAPI _connect(SOCKET s, const sockaddr *name, int namelen);
 typedef int WSAAPI _send(SOCKET s, const char *buf, int len, int flags);
+typedef int WSAAPI _closesocket(SOCKET s);
+typedef u_short _htons(u_short hostshort);
+typedef unsigned long WSAAPI _inet_addr(const char *cp);
+typedef int WSAAPI _WSAStartup(WORD wVersionRequested, LPWSADATA lpWSAData);
+typedef int _WSACleanup();
+typedef int WSAAPI _WSAGetLastError();
 
 int CALLBACK
 WinMain(HINSTANCE hInstance,
@@ -23,7 +27,10 @@ WinMain(HINSTANCE hInstance,
 	}
 	
 	WSADATA wsaData;
-    if ( WSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR ) {
+
+	_WSAGetLastError *fWSAGetLastError = (_WSAGetLastError*)GetProcAddress(libraryWinsock2, "WSAGetLastError");
+	_WSAStartup* fWSAStartup = (_WSAStartup*)GetProcAddress(libraryWinsock2, "WSAStartup");
+    if ( fWSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR ) {
 		OutputDebugStringA("WSAStartup failed.");
         return 1;
     }
@@ -35,28 +42,35 @@ WinMain(HINSTANCE hInstance,
 	if ( socketConnection == INVALID_SOCKET )
 	{	
 		char buffer[256];
-		sprintf(buffer, "Socket failed with error: %ld\n", WSAGetLastError());
+		sprintf(buffer, "Socket failed with error: %ld\n", fWSAGetLastError());
 		OutputDebugStringA(buffer);
-		
-        WSACleanup();
+
+		_WSACleanup* fWSACleanup = (_WSACleanup*)GetProcAddress(libraryWinsock2, "WSACleanup");
+        fWSACleanup();
         return 1;
 	}
 
+	_htons* fHtons = (_htons*)GetProcAddress(libraryWinsock2, "htons");
+	_inet_addr* fInet_addr = (_inet_addr*)GetProcAddress(libraryWinsock2, "inet_addr");
+	
 	struct sockaddr_in socketAddress;
     socketAddress.sin_family = AF_INET;
-	socketAddress.sin_port = htons(65432);
-	socketAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+	socketAddress.sin_port = fHtons(65432);
+	socketAddress.sin_addr.s_addr = fInet_addr("127.0.0.1");
 
 	_connect* fConnect = (_connect*)GetProcAddress(libraryWinsock2, "connect");
 	if ( fConnect(socketConnection, (SOCKADDR*) &socketAddress, sizeof(socketAddress)) == SOCKET_ERROR )
 	{
 		char buffer[256];
-		sprintf(buffer, "Socket failed with error: %ld\nReconnecting...", WSAGetLastError());
+		sprintf(buffer, "Socket failed with error: %ld\nReconnecting...", fWSAGetLastError());
 		OutputDebugStringA(buffer);
 
 		// Try to reconnect
-		closesocket(socketConnection);
-		WSACleanup();
+		_closesocket* fCloseSocket = (_closesocket*)GetProcAddress(libraryWinsock2, "closesocket");
+		fCloseSocket(socketConnection);
+
+		_WSACleanup* fWSACleanup = (_WSACleanup*)GetProcAddress(libraryWinsock2, "WSACleanup");
+		fWSACleanup();
 		Sleep(2000);
 	}
 
@@ -65,7 +79,7 @@ WinMain(HINSTANCE hInstance,
 	if ( fSend(socketConnection, socketBuffer, (int)strlen(socketBuffer), 0) == SOCKET_ERROR )
 	{
 		char buffer[256];
-		sprintf(buffer, "Socket failed with error: %ld\n", WSAGetLastError());
+		sprintf(buffer, "Socket failed with error: %ld\n", fWSAGetLastError());
 		OutputDebugStringA(buffer);
 	}
 	
