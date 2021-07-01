@@ -38,10 +38,12 @@ WinMain(HINSTANCE hInstance,
 		OutputDebugStringA(buffer);
 	}
 	
-	const char* socketBuffer = "This is a test.";
+	const char* socketBuffer = "THIS IS A TEST.";
 	if ( send(socketConnection, socketBuffer, (int)strlen(socketBuffer), 0) == SOCKET_ERROR )
 	{
-		OutputDebugStringA("Error with sending socket.");
+		char buffer[256];
+		sprintf(buffer, "Socket failed with error: %ld\n", WSAGetLastError());
+		OutputDebugStringA(buffer);
 	}
 	
 	return 0;

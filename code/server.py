@@ -15,9 +15,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     print("Accepting...")
     conn, addr = s.accept()
     with conn:
-        print('Connected by', addr)
+        print('Connected by' + str(addr))
         while True:
-            data = conn.recv(1024)
+            data = conn.recv(15)
+            print("Got data: " + str(data));
             if not data:
                 break
             conn.sendall(data)
