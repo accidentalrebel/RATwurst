@@ -13,7 +13,8 @@ Only used for educational purposes. See disclaimer below.
 
 ## TODOs
 
-* [ ] Client-server communication via sockets
+* [x] Client-server communication via sockets
+* [x] Multiple clients
 * [ ] Fetch client host information
 * [ ] Run command on client
 * [ ] Server to client file transfer
