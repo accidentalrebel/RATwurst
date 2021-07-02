@@ -24,6 +24,12 @@ Only used for educational purposes. See disclaimer below.
 * [ ] Anti-emulation/Anti-sandbox
 * [ ] and more... (?)
 
+## How to build
+
+Currently only works with Visual Studio 2019 with Visual C++ build tools. Makes use of the MVSC Compiler.
+
+Just run `build.bat` under the tools folder to build.
+
 ## Disclaimer
 
 Usage of this tool for attacking targets without prior mutual consent is illegal.
