@@ -7,18 +7,35 @@ PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
 
 print("Starting...")
 
+def clientThread(clientConnection, clientAddress):
+    clientConnection.settimeout(30)
+    
+    print('Connected to' + str(clientAddress))
+
+    try:
+        while True:
+            data = clientConnection.recv(256)
+            if not data:
+                break
+
+            print("Got data: " + str(data));
+            clientConnection.sendall(data)
+    except socket.timeout:
+        print("Connection timed out!")
+
+    print("Closing the connection for ")
+    clientConnection.close()
+
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     print("Binding...")
     s.bind((HOST, PORT))
     print("Listening...")
     s.listen()
     print("Accepting...")
-    conn, addr = s.accept()
-    with conn:
-        print('Connected by' + str(addr))
-        while True:
-            data = conn.recv(256)
-            print("Got data: " + str(data));
-            if not data:
-                break
-            conn.sendall(data)
+
+    while True:
+        conn, addr = s.accept()
+        with conn:
+            clientThread(conn, addr)
+
+    s.close()

