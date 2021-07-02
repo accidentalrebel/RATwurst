@@ -21,7 +21,7 @@ def clientThread(clientConnection, clientAddress):
                 break
 
             print("Got data: " + str(data));
-            clientConnection.sendall(data)
+            clientConnection.send(data)
             
     except socket.timeout:
         print("Connection timed out!")
