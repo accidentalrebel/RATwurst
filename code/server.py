@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+import time
 import socket
 import _thread
 import threading
 
-HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
+HOST = '127.0.0.1'
+PORT = 65432
 
 print("Starting...")
 
@@ -21,8 +22,11 @@ def clientThread(clientConnection, clientAddress):
 
             print("Got data: " + str(data));
             clientConnection.sendall(data)
+            
     except socket.timeout:
         print("Connection timed out!")
+    except Exception as e:
+        print("Unknown exception: " + str(e))
 
     print("Closing the connection for " + str(clientAddress))
     clientConnection.close()
@@ -31,13 +35,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     print("Binding...")
     s.bind((HOST, PORT))
     print("Listening...")
-    s.listen(5)
+    s.listen()
     print("Accepting...")
 
     while True:
         conn, addr = s.accept()
         with conn:
-            _thread.start_new_thread(clientThread, (conn,addr,))
-            # threading.Thread(target=clientThread,args=(conn, addr, "test")).start()
-            
+            conn_dup = conn.dup() # We duplicate the connection because it somehow gets destroyed after starting a new thread
+            threading.Thread(target=clientThread,args=(conn_dup, addr)).start()
+
     s.close()
