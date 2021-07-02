@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import socket
+import _thread
+import threading
 
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
@@ -8,8 +10,7 @@ PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
 print("Starting...")
 
 def clientThread(clientConnection, clientAddress):
-    clientConnection.settimeout(30)
-    
+    print("client: " + str(clientConnection))
     print('Connected to' + str(clientAddress))
 
     try:
@@ -23,19 +24,20 @@ def clientThread(clientConnection, clientAddress):
     except socket.timeout:
         print("Connection timed out!")
 
-    print("Closing the connection for ")
+    print("Closing the connection for " + str(clientAddress))
     clientConnection.close()
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     print("Binding...")
     s.bind((HOST, PORT))
     print("Listening...")
-    s.listen()
+    s.listen(5)
     print("Accepting...")
 
     while True:
         conn, addr = s.accept()
         with conn:
-            clientThread(conn, addr)
-
+            _thread.start_new_thread(clientThread, (conn,addr,))
+            # threading.Thread(target=clientThread,args=(conn, addr, "test")).start()
+            
     s.close()

@@ -126,7 +126,7 @@ WinMain(HINSTANCE hInstance,
 	}
 
 	SocketSend(&ratSocket, "This is a test.");
-	Sleep(1000);
+	Sleep(5000);
 	SocketSend(&ratSocket, "This is just a drill.");
 
 	char ca_recv[] = { 'r','e','c','v',0 };
