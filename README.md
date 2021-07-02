@@ -1,6 +1,27 @@
 # RATwurst
 
-Learning malware development by making a Remote Access Tool. Only used for educational purposes.
+The aim of this project is for me to learn about the techniques used by malware by making a Remote Access Tool.
+
+The more I understand the inner workings of malware and the reasoning behind how they were built, the better I can protect against them.
+
+Only used for educational purposes. See disclaimer below.
+
+## Noteworthy features (so far)
+
+* Runtime loading of DLLs
+* Anti-virus evasion via simple strings obfuscation
+
+## TODOs
+
+* [ ] Client-server communication via sockets
+* [ ] Fetch client host information
+* [ ] Run command on client
+* [ ] Server to client file transfer
+* [ ] Client to server file transfer
+* [ ] Persistence
+* [ ] Anti-debugging
+* [ ] Anti-emulation/Anti-sandbox
+* [ ] and more... (?)
 
 ## Disclaimer
 
