@@ -30,6 +30,14 @@ Currently only works with Visual Studio 2019 with Visual C++ build tools. Makes 
 
 Check out `build.bat` under the tools folder on how a build is done.
 
+## Resources
+
+These resources helped me a lot when developing this project:
+
+  * [ParadoxiaRAT](https://github.com/quantumcore/paradoxiaRAT) - Native Windows Remote access Tool project
+  * [DarkRAT](https://github.com/yatt-ze/The-Collection/tree/master/Source%20Codes/Botnets/DarkRat%20Loader/derkrut) - DarkRAT loader leaked source code
+  * [Engineering Anti-Virus Evasion](https://blog.scrt.ch/2020/07/15/engineering-antivirus-evasion-part-ii/) - Blog post about anti-virus evasion techniques for malware
+  
 ## Disclaimer
 
 Usage of this tool for attacking targets without prior mutual consent is illegal.
