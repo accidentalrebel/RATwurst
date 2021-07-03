@@ -4,11 +4,11 @@ import time
 import socket
 import threading
 
-HOST = '127.0.0.1'
+HOST = "127.0.0.1"
 PORT = 65432
 
 def clientThread(clientConnection, clientAddress):
-    print('[INFO] Connected to' + str(clientAddress))
+    print("[INFO] Connected to" + str(clientAddress))
     print("[INFO] Client: " + str(clientConnection))
 
     try:
@@ -18,7 +18,12 @@ def clientThread(clientConnection, clientAddress):
                 break
 
             print("Got data: " + str(data));
-            clientConnection.send(data)
+            command = data.decode()
+            if command == "login":
+                print(">> Got login. Sending info...")
+                clientConnection.send(b"info")
+            else:
+                clientConnection.send(data)
             
     except socket.timeout:
         print("[EXCEPTION] Connection timed out!")

