@@ -12,7 +12,16 @@ class Client:
     connection = None
     info = None
 
+class Command:
+    command = None
+    clientNumber = None
+
+    def __init__(self, command, clientNumber):
+        self.command = command
+        self.clientNumber = clientNumber
+
 clients = []
+commandQueue = []
 
 def ThreadClient(clientConnection, clientAddress):
     client = Client()
@@ -40,18 +49,15 @@ def ThreadClient(clientConnection, clientAddress):
 
                 print("[INFO] Got info response...")
                 client.info = data.decode()
+                break
             else:
                 client.connection.send(data)
-            
     except socket.timeout:
         print("[EXCEPTION] Connection timed out!")
     except Exception as e:
         print("[EXCEPTION] Unknown exception: " + str(e))
 
-    print("[INFO] Closing the connection for " + str(client.address))
-    client.connection.close()
-
-    clients.remove(client)
+    print("[INFO] Client connected and regsitered.")
 
 def ThreadSocketServer():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -83,3 +89,16 @@ while True:
                 print("Client " + str(i) + ": " + c.info + "\n")
         else:
             print("No available clients.\n")
+    elif command.startswith("shutdown"):
+        commandSplitted = command.split(" ")
+        clientNumber = int(commandSplitted[1])
+
+        command = Command(commandSplitted[0], commandSplitted[1])
+        commandQueue.append(command)
+
+        client = clients[clientNumber]
+        client.connection.send(b"shutdown")
+
+        print("[INFO] Closing the connection for " + str(client.address))
+        client.connection.close()
+        clients.remove(client)

