@@ -83,22 +83,28 @@ while True:
         else:
             print("No available clients.\n")
     elif command.startswith("shutdown"):
-        commandSplitted = command.split(" ")
-        
-        if commandSplitted[1] == "all":
-            for client in clients:
-                client.connection.send(b"shutdown")
+        commandSplitted = command.strip().split(" ")
+        if len(commandSplitted) > 1:
+            if commandSplitted[1] == "all":
+                for client in clients:
+                    client.connection.send(b"shutdown")
 
-                print("[INFO] Closing the connection for " + str(client.address))
-                client.connection.close()
+                    print("[INFO] Closing the connection for " + str(client.address))
+                    client.connection.close()
+
+                clients.clear()
+            else:
+                clientNumber = int(commandSplitted[1])
+
+                try:
+                    client = clients[clientNumber]
+                    client.connection.send(b"shutdown")
+
+                    print("[INFO] Closing the connection for " + str(client.address))
+                    client.connection.close()
+                    clients.remove(client)
+                except IndexError as e:
+                    print("[ERROR] " + str(e))
                 
-            clients.clear()
         else:
-            clientNumber = int(commandSplitted[1])
-
-            client = clients[clientNumber]
-            client.connection.send(b"shutdown")
-
-            print("[INFO] Closing the connection for " + str(client.address))
-            client.connection.close()
-            clients.remove(client)
+            print("[ERROR] Incorrect shutdown invocation. Specify \"shutdown [number]\" or \"shutdown all\"")
