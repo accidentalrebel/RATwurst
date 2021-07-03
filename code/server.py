@@ -10,6 +10,7 @@ PORT = 65432
 class Client:
     address = None
     connection = None
+    info = None
 
 clients = []
 
@@ -30,8 +31,15 @@ def ThreadClient(clientConnection, clientAddress):
             print("Got data: " + str(data));
             command = data.decode()
             if command == "login":
-                print(">> Got login. Sending info...")
+                print("[INFO] Got login response. Sending info command...")
                 client.connection.send(b"info")
+
+                data = client.connection.recv(256)
+                if not data:
+                    break
+
+                print("[INFO] Got info response...")
+                client.info = data.decode()
             else:
                 client.connection.send(data)
             
@@ -70,6 +78,8 @@ while True:
     command = input(">> ")
     if command == "list":
         if len(clients) > 0:
-            print("Client 0: " + str(clients[0].connection) + "\n")
+            i = 0
+            for c in clients:
+                print("Client " + str(i) + ": " + c.info + "\n")
         else:
             print("No available clients.\n")
