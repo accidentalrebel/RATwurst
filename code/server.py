@@ -13,7 +13,7 @@ class Client:
 
 clients = []
 
-def clientThread(clientConnection, clientAddress):
+def ThreadClient(clientConnection, clientAddress):
     client = Client()
     client.connection = clientConnection
     client.address = clientAddress
@@ -45,16 +45,31 @@ def clientThread(clientConnection, clientAddress):
 
     clients.remove(client)
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    print("[INFO] Binding to " + HOST + " and " + str(PORT) + "...")
-    s.bind((HOST, PORT))
-    print("[INFO] Listening...")
-    s.listen()
+def ThreadSocketServer():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        print("[INFO] Binding to " + HOST + " and " + str(PORT) + "...")
+        s.bind((HOST, PORT))
+        print("[INFO] Listening...")
+        s.listen()
 
-    while True:
-        conn, addr = s.accept()
-        with conn:
-            conn_dup = conn.dup() # We duplicate the connection because it somehow gets destroyed after starting a new thread
-            threading.Thread(target=clientThread,args=(conn_dup, addr)).start()
+        while True:
+            conn, addr = s.accept()
+            with conn:
+                conn_dup = conn.dup() # We duplicate the connection because it somehow gets destroyed after starting a new thread
+                threading.Thread(target=ThreadClient,args=(conn_dup, addr)).start()
 
-    s.close()
+        s.close()
+
+threading.Thread(target=ThreadSocketServer).start()
+
+time.sleep(1)
+
+print("Available commands:\n  list: Lists down available clients.\n")
+
+while True:
+    command = input(">> ")
+    if command == "list":
+        if len(clients) > 0:
+            print("Client 0: " + str(clients[0].connection) + "\n")
+        else:
+            print("No available clients.\n")
