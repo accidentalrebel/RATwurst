@@ -12,16 +12,7 @@ class Client:
     connection = None
     info = None
 
-class Command:
-    command = None
-    clientNumber = None
-
-    def __init__(self, command, clientNumber):
-        self.command = command
-        self.clientNumber = clientNumber
-
 clients = []
-commandQueue = []
 
 def ThreadRegisterClient(client):
     print("[INFO] Connected to" + str(client.address))
@@ -55,7 +46,7 @@ def ThreadRegisterClient(client):
 
     print("[INFO] Client connected and registered.")
 
-def ThreadSocketServer():
+def ThreadStartServer():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         print("[INFO] Binding to " + HOST + " and " + str(PORT) + "...")
         s.bind((HOST, PORT))
@@ -76,7 +67,7 @@ def ThreadSocketServer():
 
         s.close()
 
-threading.Thread(target=ThreadSocketServer).start()
+threading.Thread(target=ThreadStartServer).start()
 
 time.sleep(1)
 
@@ -93,14 +84,21 @@ while True:
             print("No available clients.\n")
     elif command.startswith("shutdown"):
         commandSplitted = command.split(" ")
-        clientNumber = int(commandSplitted[1])
+        
+        if commandSplitted[1] == "all":
+            for client in clients:
+                client.connection.send(b"shutdown")
 
-        command = Command(commandSplitted[0], commandSplitted[1])
-        commandQueue.append(command)
+                print("[INFO] Closing the connection for " + str(client.address))
+                client.connection.close()
+                
+            clients.clear()
+        else:
+            clientNumber = int(commandSplitted[1])
 
-        client = clients[clientNumber]
-        client.connection.send(b"shutdown")
+            client = clients[clientNumber]
+            client.connection.send(b"shutdown")
 
-        print("[INFO] Closing the connection for " + str(client.address))
-        client.connection.close()
-        clients.remove(client)
+            print("[INFO] Closing the connection for " + str(client.address))
+            client.connection.close()
+            clients.remove(client)
