@@ -16,7 +16,7 @@ Only used for educational purposes. See disclaimer below.
 * [x] Client-server communication via sockets
 * [x] Multiple clients
 * [ ] Fetch client host information
-* [ ] Run command on client
+* [ ] Encrypt messages
 * [ ] Server to client file transfer
 * [ ] Client to server file transfer
 * [ ] Persistence
@@ -28,7 +28,7 @@ Only used for educational purposes. See disclaimer below.
 
 Currently only works with Visual Studio 2019 with Visual C++ build tools. Makes use of the MVSC Compiler.
 
-Just run `build.bat` under the tools folder to build.
+Check out `build.bat` under the tools folder on how a build is done.
 
 ## Disclaimer
 
