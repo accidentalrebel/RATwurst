@@ -7,13 +7,23 @@ import threading
 HOST = "127.0.0.1"
 PORT = 65432
 
+class Client:
+    address = None
+    connection = None
+
+clients = []
+
 def clientThread(clientConnection, clientAddress):
-    print("[INFO] Connected to" + str(clientAddress))
-    print("[INFO] Client: " + str(clientConnection))
+    client = Client()
+    client.connection = clientConnection
+    client.address = clientAddress
+    clients.append(client)
+    print("[INFO] Connected to" + str(client.address))
+    print("[INFO] Client: " + str(client.connection))
 
     try:
         while True:
-            data = clientConnection.recv(256)
+            data = client.connection.recv(256)
             if not data:
                 break
 
@@ -21,17 +31,19 @@ def clientThread(clientConnection, clientAddress):
             command = data.decode()
             if command == "login":
                 print(">> Got login. Sending info...")
-                clientConnection.send(b"info")
+                client.connection.send(b"info")
             else:
-                clientConnection.send(data)
+                client.connection.send(data)
             
     except socket.timeout:
         print("[EXCEPTION] Connection timed out!")
     except Exception as e:
         print("[EXCEPTION] Unknown exception: " + str(e))
 
-    print("[INFO] Closing the connection for " + str(clientAddress))
-    clientConnection.close()
+    print("[INFO] Closing the connection for " + str(client.address))
+    client.connection.close()
+
+    clients.remove(client)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     print("[INFO] Binding to " + HOST + " and " + str(PORT) + "...")
