@@ -15,7 +15,8 @@ Only used for educational purposes. See disclaimer below.
 
 * [x] Client-server communication via sockets
 * [x] Multiple clients
-* [ ] Fetch client host information
+* [x] Fetch client host information
+* [x] Shutdown client
 * [ ] Encrypt messages
 * [ ] Server to client file transfer
 * [ ] Client to server file transfer
