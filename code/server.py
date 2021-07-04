@@ -16,7 +16,7 @@ clients = []
 
 def ThreadRegisterClient(client):
     print("[INFO] Connected to" + str(client.address))
-    print("[INFO] Client: " + str(client.connection))
+    print("[DEBUG] Client: " + str(client.connection))
 
     try:
         while True:
@@ -71,9 +71,10 @@ threading.Thread(target=ThreadStartServer).start()
 
 time.sleep(1)
 
-print("""Available commands:\n
-  list: Lists down available clients.\n
-  cmd: Run command on client.\n""")
+print("""Available commands:
+* list: Lists down available clients.
+* cmd: Run command on client.
+* shutdown: Shuts down the client.\n""")
 
 while True:
     command = input(">> ")
