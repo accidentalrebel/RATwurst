@@ -204,16 +204,18 @@ WinMain(HINSTANCE hInstance,
 			STARTUPINFO si = { };
 			si.cb = sizeof(si);
 
-			char tempPath[MAX_PATH];
-			GetTempPathA(MAX_PATH, tempPath);
-
 			char cmdPath[MAX_PATH+8];
 			GetSystemDirectoryA(cmdPath, MAX_PATH);
 
 			char ca_cmdexe[] = { '\\','c','m','d','.','e','x','e',0 };
 			strncat_s(cmdPath, ca_cmdexe, 8);
 
-			char *cmdArg = "/C dir > X:\\output\\test.txt";
+			char tempPath[MAX_PATH];
+			GetTempPathA(MAX_PATH, tempPath);
+
+			char cmdArg[MAX_PATH+8] = { '/','C',' ','d','i','r',' ','>',' ',0 };
+			strncat_s(cmdArg, tempPath, sizeof(tempPath));
+			strncat_s(cmdArg, "test.txt", 8);
 	
 			if ( !CreateProcess(cmdPath, cmdArg, NULL, NULL, FALSE, 0 , NULL, NULL, &si, &pi) )
 			{
