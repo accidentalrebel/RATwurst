@@ -224,6 +224,8 @@ WinMain(HINSTANCE hInstance,
 				OutputDebugStringA(bufferError);
 			}
 
+			WaitForSingleObject( pi.hProcess, INFINITE );
+
 			CloseHandle(pi.hProcess);
 			CloseHandle(pi.hThread);
 		}
