@@ -238,7 +238,7 @@ WinMain(HINSTANCE hInstance,
 			char tempPath[MAX_PATH];
 			GetTempPathA(MAX_PATH, tempPath);
 
-			char cmdArg[MAX_PATH+8] = { '/','C',' ',0 };
+			char cmdArg[MAX_PATH + 8 + 3 + sizeof(tempPath)] = { '/','C',' ',0 };
 
 			int commandIndex = 1;
 			while ( splittedCommand[commandIndex] != NULL )
