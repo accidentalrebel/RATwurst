@@ -68,14 +68,17 @@ def ThreadStartServer():
         s.close()
 
 def SendCommandToClient(client, command):
+    fullReceived = ""
     client.connection.send(command.encode())
 
     while True:
         data = client.connection.recv(256).decode()
-        if data == "DONE":
-            break;
+        if data != "DONE":
+            fullReceived += data
         else:
-            print("Received: " + data);
+            break
+
+    print("Received from " + client.info + ":\n" + fullReceived);
 
 threading.Thread(target=ThreadStartServer).start()
 
@@ -93,7 +96,8 @@ while True:
         if len(clients) > 0:
             i = 0
             for c in clients:
-                print("Client " + str(i) + ": " + c.info + "\n")
+                print("Client " + str(i) + ": " + c.info)
+                i += 1
         else:
             print("No available clients.\n")
             
