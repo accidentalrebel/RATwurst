@@ -270,7 +270,7 @@ WinMain(HINSTANCE hInstance,
 
 			char cmdArg[MAX_PATH + 8 + 3 + sizeof(tempPath)] = { '/','C',' ',0 };
 
-			int commandIndex = 1;
+			int commandIndex = 2;
 			while ( splittedCommand[commandIndex] != NULL )
 			{
 				strncat_s(cmdArg, splittedCommand[commandIndex], sizeof(splittedCommand[commandIndex]));
