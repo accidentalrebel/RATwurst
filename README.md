@@ -19,9 +19,10 @@ Only used for educational purposes. See disclaimer below.
 * [x] Multiple clients
 * [x] Fetch client host information
 * [x] Shutdown client
-* [ ] Encrypt messages
+* [x] Remote command execution
 * [ ] Server to client file transfer
 * [ ] Client to server file transfer
+* [ ] Encrypt messages
 * [ ] Persistence
 * [ ] Anti-debugging
 * [ ] Anti-emulation/Anti-sandbox
