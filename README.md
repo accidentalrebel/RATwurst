@@ -41,6 +41,7 @@ These resources helped me a lot when developing this project:
   * [ParadoxiaRAT](https://github.com/quantumcore/paradoxiaRAT) - Native Windows Remote access Tool project
   * [Ghost](https://github.com/AHXR/ghost) -  RAT (Remote Access Trojan) - Silent Botnet - Full Remote Command-Line Access - Download & Execute Programs - Spread Virus' & Malware
   * [DarkRAT](https://github.com/yatt-ze/The-Collection/tree/master/Source%20Codes/Botnets/DarkRat%20Loader/derkrut) - DarkRAT loader leaked source code
+  * [WinAPI-Tricks](https://github.com/vxunderground/WinAPI-Tricks) - Collection of various WINAPI tricks / features used or abused by Malware
   * [Engineering Anti-Virus Evasion](https://blog.scrt.ch/2020/07/15/engineering-antivirus-evasion-part-ii/) - Blog post about anti-virus evasion techniques for malware
   
 ## Disclaimer
