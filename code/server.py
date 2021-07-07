@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import time
 import socket
 import threading
@@ -144,6 +145,11 @@ while True:
 
         targetPath = commandSplitted[2]
         f = open(targetPath, "rb")
+
+        fileSize = os.stat(targetPath).st_size
+        fileSizeStr = str(fileSize).rjust(8, '0')
+        client.connection.send(fileSizeStr.encode())
+        
         if f:
             print("[INFO] Reading received data from " + targetPath)
 
