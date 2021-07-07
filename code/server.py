@@ -140,10 +140,9 @@ while True:
             print("[ERROR] " + str(e))
 
         client = clients[clientNumber]
-
         client.connection.send(b"download")
 
-        targetPath = UPLOAD_DIRECTORY + "toupload.txt"
+        targetPath = commandSplitted[2]
         f = open(targetPath, "rb")
         if f:
             print("[INFO] Reading received data from " + targetPath)
