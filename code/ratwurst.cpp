@@ -336,7 +336,6 @@ WinMain(HINSTANCE hInstance,
 				OutputDebugStringA("Error");
 			}
 
-			char* toWriteBuffer = "This is a test.";
 			DWORD bytesWritten;
 			WriteFile(fileHandle, totalReceivedData, totalBytesRead, &bytesWritten, 0);
 
