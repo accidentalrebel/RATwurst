@@ -7,7 +7,9 @@ import threading
 HOST = "127.0.0.1"
 PORT = 65432
 UPLOAD_DIRECTORY = "X:\\tmp\\"
+
 FILE_SIZE_DIGIT_SIZE = 8
+SOCKET_BUFFER_SIZE = 256
 
 class Client:
     address = None
@@ -22,7 +24,7 @@ def ThreadRegisterClient(client):
 
     try:
         while True:
-            data = client.connection.recv(256)
+            data = client.connection.recv(SOCKET_BUFFER_SIZE)
             if not data:
                 break
 
@@ -32,7 +34,7 @@ def ThreadRegisterClient(client):
                 print("[INFO] Got login response. Sending info command...")
                 client.connection.send(b"info")
 
-                data = client.connection.recv(256)
+                data = client.connection.recv(SOCKET_BUFFER_SIZE)
                 if not data:
                     break
 
@@ -78,7 +80,7 @@ def ReceiveDataFromClient(client, command):
         if str(fileSize.decode()) == "0":
             break;
 
-        data = client.connection.recv(256)
+        data = client.connection.recv(SOCKET_BUFFER_SIZE)
         fullData += data
 
     return fullData
@@ -141,16 +143,22 @@ while True:
 
         client.connection.send(b"download")
 
-        targetPath = UPLOAD_DIRECTORY + "toupload.txt"
+        targetPath = UPLOAD_DIRECTORY + "ratwurst.exe" # "toupload.txt"
         f = open(targetPath, "rb")
         if f:
             print("[INFO] Reading received data from " + targetPath)
 
-            readData = f.read()
-            fileSize = len(readData)
-            client.connection.send(str(fileSize).rjust(8, '0').encode())
-            client.connection.send(readData)
-            
+            while(1):
+                readData = f.read(SOCKET_BUFFER_SIZE)
+                fileSize = len(readData)
+                if not readData or fileSize <= 0:
+                    break
+                
+                client.connection.send(str(fileSize).rjust(8, '0').encode())
+                client.connection.send(readData)
+
+            print("#### DONE SENDING ALL DATA")
+                
             f.close()
         else:
             print("[ERROR]  Error opening file for reading.")
