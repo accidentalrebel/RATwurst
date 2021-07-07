@@ -330,7 +330,7 @@ WinMain(HINSTANCE hInstance,
 
 			OutputDebugStringA(totalReceivedData);
 
-			HANDLE fileHandle = CreateFileA("test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			HANDLE fileHandle = CreateFileA(splittedCommand[1], GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 			if ( fileHandle == INVALID_HANDLE_VALUE )
 			{
 				OutputDebugStringA("Error");
