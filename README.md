@@ -20,8 +20,8 @@ Only used for educational purposes. See disclaimer below.
 * [x] Fetch client host information
 * [x] Shutdown client
 * [x] Remote command execution
+* [x] Client to server file transfer
 * [ ] Server to client file transfer
-* [ ] Client to server file transfer
 * [ ] Encrypt messages
 * [ ] Persistence
 * [ ] Anti-debugging
