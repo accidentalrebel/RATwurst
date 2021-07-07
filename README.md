@@ -21,7 +21,7 @@ Only used for educational purposes. See disclaimer below.
 * [x] Shutdown client
 * [x] Remote command execution
 * [x] Client to server file transfer
-* [ ] Server to client file transfer
+* [x] Server to client file transfer
 * [ ] Encrypt messages
 * [ ] Persistence
 * [ ] Anti-debugging
