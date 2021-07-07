@@ -6,6 +6,7 @@ import threading
 
 HOST = "127.0.0.1"
 PORT = 65432
+UPLOAD_DIRECTORY = "X:\\upload\\"
 
 class Client:
     address = None
@@ -140,10 +141,12 @@ while True:
 
         receivedData = ReceiveDataFromClient(client, RemoveClientNumber(commandSplitted));
         if len(receivedData) > 0:
-            targetFileName = "X:\\output\\received.txt"
-            f = open(targetFileName, "wb")
+            filePathSplitted = commandSplitted[2].split("\\")
+            fileName = client.info + "_" + filePathSplitted[len(filePathSplitted) - 1]
+            targetPath = UPLOAD_DIRECTORY + fileName
+            f = open(targetPath, "wb")
             if f:
-                print("[INFO] Writing received data to " + targetFileName)
+                print("[INFO] Writing received data to " + targetPath)
                 f.write(receivedData)
                 f.close()
             else:
