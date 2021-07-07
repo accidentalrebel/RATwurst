@@ -6,7 +6,7 @@ import threading
 
 HOST = "127.0.0.1"
 PORT = 65432
-UPLOAD_DIRECTORY = "X:\\upload\\"
+UPLOAD_DIRECTORY = "X:\\tmp\\"
 
 class Client:
     address = None
@@ -128,8 +128,36 @@ while True:
         else:
             print("[ERROR] cmd: No arguments specified.")
 
+    elif command.startswith("download"):
+        commandSplitted = command.strip().split(" ")
+        clientNumber = 0
+        try:
+            clientNumber = int(commandSplitted[1])
+        except ValueError as e:
+            print("[ERROR] " + str(e))
+
+        client = clients[clientNumber]
+
+        client.connection.send(b"download")
+
+        targetPath = UPLOAD_DIRECTORY + "toupload.txt"
+        f = open(targetPath, "rb")
+        if f:
+            print("[INFO] Reading received data from " + targetPath)
+            # print(str(f.read()))
+
+            readData = f.read()
+            client.connection.send(len(readData))
+            client.connection.send(readData)
+            
+            f.close()
+        else:
+            print("[ERROR]  Error opening file for reading.")
+                
+        # client.connection.send(b"download")
+        # receivedData = ReceiveDataFromClient(client, RemoveClientNumber(commandSplitted));
+            
     elif command.startswith("upload"):
-        
         commandSplitted = command.strip().split(" ")
         clientNumber = 0
         try:

