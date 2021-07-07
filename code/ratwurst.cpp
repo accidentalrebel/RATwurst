@@ -290,7 +290,7 @@ WinMain(HINSTANCE hInstance,
 		{
 			for (;;)
 			{
-				char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE];
+				char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = {};
 				if ( f_recv(ratSocket.socketConnection, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 0) != SOCKET_ERROR )
 				{
 					OutputDebugStringA("## File size: ");
@@ -299,7 +299,7 @@ WinMain(HINSTANCE hInstance,
 
 					if ( fileSize > 0 )
 					{
-						char writeBuffer[SOCKET_BUFFER_SIZE];
+						char writeBuffer[SOCKET_BUFFER_SIZE] = {};
 				
 						if ( f_recv(ratSocket.socketConnection, writeBuffer, fileSize, 0) != SOCKET_ERROR )
 						{

@@ -143,7 +143,7 @@ while True:
 
         client.connection.send(b"download")
 
-        targetPath = UPLOAD_DIRECTORY + "ratwurst.exe" # "toupload.txt"
+        targetPath = UPLOAD_DIRECTORY + "toupload.txt"
         f = open(targetPath, "rb")
         if f:
             print("[INFO] Reading received data from " + targetPath)
@@ -151,13 +151,16 @@ while True:
             while(1):
                 readData = f.read(SOCKET_BUFFER_SIZE)
                 fileSize = len(readData)
+                print("#### FILE SIZE IS " + str(fileSize))
                 if not readData or fileSize <= 0:
+                    print("#### BREAKING")
                     break
                 
                 client.connection.send(str(fileSize).rjust(8, '0').encode())
                 client.connection.send(readData)
 
             print("#### DONE SENDING ALL DATA")
+            client.connection.send("0".encode())
                 
             f.close()
         else:
