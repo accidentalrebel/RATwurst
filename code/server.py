@@ -133,6 +133,10 @@ while True:
             print("[ERROR] cmd: No arguments specified.")
 
     elif command.startswith("download"):
+        ## TEST
+        command = "download 0 x:\\tmp\\toupload.txt"
+        ## END_TEST
+        
         commandSplitted = command.strip().split(" ")
         clientNumber = 0
         try:
