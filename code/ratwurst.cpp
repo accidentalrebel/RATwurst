@@ -310,18 +310,18 @@ WinMain(HINSTANCE hInstance,
 	strncpy_s(newPath, MAX_PATH, tempPath, strlen(tempPath));
 	strncat_s(newPath, "rtwst.tmp", 9);
 
-	char ca_CopyFileA[] = { 'C','o','p','y','F','i','l','e','A',0 };
-	_CopyFileA* f_CopyFileA = (_CopyFileA*)GetProcAddress(gLibraryKernel32, ca_CopyFileA);
-	if ( f_CopyFileA == NULL )
+	char ca_MoveFileExA[] = { 'C','o','p','y','F','i','l','e','A',0 };
+	_MoveFileExA* f_MoveFileExA = (_MoveFileExA*)GetProcAddress(gLibraryKernel32, ca_MoveFileExA);
+	if ( f_MoveFileExA == NULL )
 	{
 #if DEBUG
 		char buffer[256];
-		sprintf_s(buffer, "Failure in getting CopyFileA using GetProcAddress: %d\n", GetLastError());
+		sprintf_s(buffer, "Failure in getting MoveFileExA using GetProcAddress: %d\n", GetLastError());
 		OutputDebugStringA(buffer);
 #endif		
 	}
 	
-	if ( f_CopyFileA(currentPath, newPath, 0) == 0 )
+	if ( f_MoveFileExA(currentPath, newPath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) == 0 )
 	{
 #if DEBUG
 		char buffer[256];

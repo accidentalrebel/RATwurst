@@ -20,7 +20,7 @@ typedef HANDLE _CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwSh
 typedef DWORD _WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
 typedef BOOL _CloseHandle(HANDLE hObject);
 typedef BOOL _WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
-typedef BOOL _CopyFileA(LPCTSTR lpExistingFileName, LPCTSTR lpNewFileName, BOOL bFailIfExists);
+typedef BOOL _MoveFileExA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, DWORD  dwFlags);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE 16
