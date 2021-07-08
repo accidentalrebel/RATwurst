@@ -10,8 +10,10 @@ int SplitString(char* str, char* dest[SPLIT_STRING_ARRAY_SIZE], char* seps)
 	token = strtok_s(str, seps, &nextToken);
 	while( token != NULL )
 	{
+#if DEBUG				
 		OutputDebugStringA(token);
 		OutputDebugStringA("\n");
+#endif		
 
 		dest[index++] = token;
 		

