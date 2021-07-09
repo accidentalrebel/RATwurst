@@ -123,7 +123,7 @@ while True:
             
     elif command.startswith("cmd"):
         commandSplitted = command.strip().split(" ")
-        if len(commandSplitted) == 3:
+        if len(commandSplitted) >= 3:
             cleanedCommand = RemoveClientNumber(commandSplitted)
             
             if commandSplitted[1] == "all":

@@ -379,7 +379,9 @@ WinMain(HINSTANCE hInstance,
 		char commandToRun[MAX_PATH * 2 + 30] = {};
 		strncpy_s(commandToRun, pingCommand, pingCommandLength);
 		strncat_s(commandToRun, currentPath, strlen(currentPath));
-		strncat_s(commandToRun, " & call ", strlen(currentPath));
+
+		char callCommand[] = { ' ','&',' ','c','a','l','l',' ',0 };
+		strncat_s(commandToRun, callCommand, strlen(currentPath));
 		strncat_s(commandToRun, newPath, strlen(newPath));
 		
 		RunCommandInProcess(commandToRun, 0);

@@ -12,6 +12,7 @@ Only used for educational purposes. See disclaimer below.
 
 * Runtime loading of DLLs
 * Anti-virus evasion via simple strings obfuscation
+* Deletes itself and runs from temporary folder
 
 ## TODOs
 
@@ -22,8 +23,8 @@ Only used for educational purposes. See disclaimer below.
 * [x] Remote command execution
 * [x] Client to server file transfer
 * [x] Server to client file transfer
-* [ ] Encrypt messages
 * [ ] Persistence
+* [ ] Encrypt messages
 * [ ] Anti-debugging
 * [ ] Anti-emulation/Anti-sandbox
 * [ ] and more... (?)
