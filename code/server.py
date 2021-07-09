@@ -74,6 +74,9 @@ def ThreadStartServer():
 
 def ReceiveDataFromClient(client, command):
     client.connection.send(command.encode())
+
+    fileSize = client.connection.recv(FILE_SIZE_DIGIT_SIZE)
+    print("## FILESIZE OF WHOLE FILE: " + str(fileSize.decode()))
     
     fullData = bytearray()
     while True:
