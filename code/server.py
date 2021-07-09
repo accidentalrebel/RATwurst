@@ -78,10 +78,12 @@ def ReceiveDataFromClient(client, command):
     fullData = bytearray()
     while True:
         fileSize = client.connection.recv(8)
+        print("## FILESIZE: " + str(fileSize.decode()) + "\n=====\n");
         if str(fileSize.decode()) == "0":
             break;
 
         data = client.connection.recv(SOCKET_BUFFER_SIZE)
+        print("## DATA: " + str(data.decode()) + "\n=====\n");
         fullData += data
 
     return fullData
