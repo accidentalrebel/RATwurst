@@ -75,23 +75,25 @@ def ThreadStartServer():
 def ReceiveDataFromClient(client, command):
     client.connection.send(command.encode())
 
+    fullData = bytearray()
+
     receivedFileSize = client.connection.recv(FILE_SIZE_DIGIT_SIZE);
     fileSizeDecoded = receivedFileSize.decode()
     fileSize = int(str(fileSizeDecoded).strip('\x00'))
+    if fileSize > 0:
+        totalBytesReceived = 0
 
-    totalBytesReceived = 0
-    
-    fullData = bytearray()
-    while True:
-        data = client.connection.recv(SOCKET_BUFFER_SIZE)
-        
-        print("## DATA: (" + str(len(data)) +") " + str(data.decode()) + "\n=====\n");
-        fullData += data
+        while True:
+            data = client.connection.recv(SOCKET_BUFFER_SIZE)
 
-        totalBytesReceived += len(data)
-        if totalBytesReceived >= fileSize:
-            break;
+            print("## DATA: (" + str(len(data)) +") " + str(data.decode()) + "\n=====\n");
+            fullData += data
 
+            totalBytesReceived += len(data)
+            if totalBytesReceived >= fileSize:
+                break;
+    else:
+        print("[INFO] Received data is zero/empty.")
 
     return fullData
 
