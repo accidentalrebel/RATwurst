@@ -9,6 +9,7 @@ HOST = "127.0.0.1"
 PORT = 65432
 UPLOAD_DIRECTORY = "X:\\tmp\\"
 
+CRYPT_KEY = 33
 FILE_SIZE_DIGIT_SIZE = 8
 SOCKET_BUFFER_SIZE = 256
 
@@ -18,6 +19,35 @@ class Client:
     info = None
 
 clients = []
+
+def EncryptDecryptString(s):
+    isString = False
+    if isinstance(s, str):
+        isString = True
+        new_s = ""
+    else:
+        new_s = bytearray()
+        
+    i = 0
+    for c in s:
+        if isString:
+            ord_c = ord(c)
+        else:
+            ord_c = c
+
+        if ord_c != 0:
+            res = ord_c ^ CRYPT_KEY
+        else:
+            res = 0
+
+        if isString:
+            new_s += chr(res)
+        else:
+            new_s.append(res)
+
+        i += 1
+
+    return new_s;
 
 def ThreadRegisterClient(client):
     print("[INFO] Connected to" + str(client.address))
@@ -31,6 +61,8 @@ def ThreadRegisterClient(client):
 
             print("Got data: " + str(data));
             command = data.decode()
+            command = EncryptDecryptString(command)
+            
             if command == "login":
                 print("[INFO] Got login response. Sending info command...")
                 client.connection.send(b"info")
@@ -40,7 +72,7 @@ def ThreadRegisterClient(client):
                     break
 
                 print("[INFO] Got info response...")
-                client.info = data.decode()
+                client.info = EncryptDecryptString(data.decode())
                 break
             else:
                 client.connection.send(data)
@@ -78,13 +110,14 @@ def ReceiveDataFromClient(client, command):
     fullData = bytearray()
 
     receivedFileSize = client.connection.recv(FILE_SIZE_DIGIT_SIZE);
-    fileSizeDecoded = receivedFileSize.decode()
+    fileSizeDecoded = EncryptDecryptString(receivedFileSize.decode())
     fileSize = int(str(fileSizeDecoded).strip('\x00'))
     if fileSize > 0:
         totalBytesReceived = 0
 
         while True:
             data = client.connection.recv(SOCKET_BUFFER_SIZE)
+            EncryptDecryptString(data)
             fullData += data
 
             totalBytesReceived += len(data)
@@ -129,14 +162,14 @@ while True:
             if commandSplitted[1] == "all":
                 for client in clients:
                     receivedData = ReceiveDataFromClient(client, cleanedCommand)
-                    print("Received from " + client.info + ":\n" + receivedData.decode());
+                    print("Received from " + client.info + ":\n" + EncryptDecryptString(receivedData.decode()))
             else:
                 try:
                     clientNumber = int(commandSplitted[1])
 
                     client = clients[clientNumber]
                     receivedData = ReceiveDataFromClient(client, cleanedCommand)
-                    print("Received from " + client.info + ":\n" + receivedData.decode());
+                    print("Received from " + client.info + ":\n" + EncryptDecryptString(receivedData.decode()))
 
                 except ValueError as e:
                     print("[ERROR] " + str(e))
