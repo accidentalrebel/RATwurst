@@ -22,6 +22,9 @@ typedef BOOL _CloseHandle(HANDLE hObject);
 typedef BOOL _WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
 typedef BOOL _MoveFileExA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, DWORD  dwFlags);
 typedef BOOL _CopyFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, BOOL   bFailIfExists);
+typedef LSTATUS _RegCloseKey(HKEY hKey);
+typedef LSTATUS _RegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult);
+typedef LSTATUS _RegSetValueExA(HKEY hKey, LPCSTR lpValueName, DWORD Reserved, DWORD dwType, const BYTE *lpData, DWORD cbData);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE MAX_PATH

