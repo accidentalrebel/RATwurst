@@ -24,10 +24,10 @@ struct RATSocket
 };
 
 int
-EncryptDecryptString(char* str)
+EncryptDecryptString(char* str, int bufferSize)
 {
 	int i = 0;
-	while(*str != NULL )
+	while(*str != NULL && i < bufferSize)
 	{
 		if ( *str != 0 )
 		{
@@ -48,7 +48,7 @@ SocketSend(RATSocket* ratSocket, char*
 	OutputDebugString(messageBuffer);
 	OutputDebugString(" << Before\n");
 
-	EncryptDecryptString(messageBuffer);
+	EncryptDecryptString(messageBuffer, bufferSize);
 
 	OutputDebugString(messageBuffer);
 	OutputDebugString(" << After\n");
