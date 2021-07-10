@@ -13,6 +13,7 @@ Only used for educational purposes. See disclaimer below.
 * Runtime loading of DLLs
 * Anti-virus evasion via simple strings obfuscation
 * Deletes itself and runs from temporary folder
+* Anti-debugging via rdtsc timing
 
 ## TODOs
 
@@ -25,8 +26,8 @@ Only used for educational purposes. See disclaimer below.
 * [x] Server to client file transfer
 * [x] Persistence
 * [x] Encrypt messages
-* [ ] Anti-debugging
-* [ ] Anti-emulation/Anti-sandbox
+* [x] Anti-debugging
+* [x] Anti-emulation/Anti-sandbox
 * [ ] and more... (?)
 
 ## How to build
