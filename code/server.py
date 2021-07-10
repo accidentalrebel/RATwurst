@@ -85,8 +85,6 @@ def ReceiveDataFromClient(client, command):
 
         while True:
             data = client.connection.recv(SOCKET_BUFFER_SIZE)
-
-            print("## DATA: (" + str(len(data)) +") " + str(data.decode()) + "\n=====\n");
             fullData += data
 
             totalBytesReceived += len(data)
