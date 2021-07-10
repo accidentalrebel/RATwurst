@@ -66,7 +66,7 @@ def ThreadRegisterClient(client):
             
             if command == "login":
                 print("[INFO] Got login response. Sending info command...")
-                client.connection.send(b"info")
+                client.connection.send(EncryptDecryptString(b"info"))
 
                 data = client.connection.recv(SOCKET_BUFFER_SIZE)
                 if not data:
@@ -76,7 +76,7 @@ def ThreadRegisterClient(client):
                 client.info = EncryptDecryptString(data.decode())
                 break
             else:
-                client.connection.send(data)
+                client.connection.send(EncryptDecryptString(data))
     except socket.timeout:
         print("[EXCEPTION] Connection timed out!")
     except Exception as e:
@@ -106,7 +106,7 @@ def ThreadStartServer():
         s.close()
 
 def ReceiveDataFromClient(client, command):
-    client.connection.send(command.encode())
+    client.connection.send(EncryptDecryptString(command.encode()))
 
     fullData = bytearray()
 
@@ -184,14 +184,14 @@ class ServerShell(cmd.Cmd):
                 print("[ERROR] " + str(e))
 
             client = clients[clientNumber]
-            client.connection.send(b"download " + args[2].encode())
+            client.connection.send(EncryptDecryptString(b"download " + args[2].encode()))
 
             targetPath = args[1]
             f = open(targetPath, "rb")
 
             fileSize = os.stat(targetPath).st_size
             fileSizeStr = str(fileSize).rjust(8, '0')
-            client.connection.send(fileSizeStr.encode())
+            client.connection.send(EncryptDecryptString(fileSizeStr.encode()))
 
             if f:
                 print("[INFO] Reading received data from " + targetPath)
@@ -200,7 +200,7 @@ class ServerShell(cmd.Cmd):
                     readData = f.read(SOCKET_BUFFER_SIZE)
                     if len(readData) <= 0 or readData == None:
                         break
-                    client.connection.send(readData)
+                    client.connection.send(EncryptDecryptString(readData))
 
                 print("[INFO] DONE SENDING ALL DATA")
 
@@ -248,7 +248,7 @@ class ServerShell(cmd.Cmd):
         if len(args) == 1:
             if args[0] == "all":
                 for client in clients:
-                    client.connection.send(b"shutdown")
+                    client.connection.send(EncryptDecryptString(b"shutdown"))
 
                     print("[INFO] Closing the connection for " + str(client.address))
                     client.connection.close()
@@ -259,7 +259,7 @@ class ServerShell(cmd.Cmd):
 
                 try:
                     client = clients[clientNumber]
-                    client.connection.send(b"shutdown")
+                    client.connection.send(EncryptDecryptString(b"shutdown"))
 
                     print("[INFO] Closing the connection for " + str(client.address))
                     client.connection.close()

@@ -23,8 +23,8 @@ Only used for educational purposes. See disclaimer below.
 * [x] Remote command execution
 * [x] Client to server file transfer
 * [x] Server to client file transfer
-* [ ] Persistence
-* [ ] Encrypt messages
+* [x] Persistence
+* [x] Encrypt messages
 * [ ] Anti-debugging
 * [ ] Anti-emulation/Anti-sandbox
 * [ ] and more... (?)
