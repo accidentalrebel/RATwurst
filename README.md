@@ -26,8 +26,8 @@ Only used for educational purposes. See disclaimer below.
 * [x] Server to client file transfer
 * [x] Persistence
 * [x] Encrypt messages
-* [x] Anti-debugging
-* [x] Anti-emulation/Anti-sandbox
+* [ ] Anti-debugging
+* [ ] Anti-emulation/Anti-sandbox
 * [ ] and more... (?)
 
 ## How to build
@@ -45,7 +45,8 @@ These resources helped me a lot when developing this project:
   * [DarkRAT](https://github.com/yatt-ze/The-Collection/tree/master/Source%20Codes/Botnets/DarkRat%20Loader/derkrut) - DarkRAT loader leaked source code
   * [WinAPI-Tricks](https://github.com/vxunderground/WinAPI-Tricks) - Collection of various WINAPI tricks / features used or abused by Malware
   * [Engineering Anti-Virus Evasion](https://blog.scrt.ch/2020/07/15/engineering-antivirus-evasion-part-ii/) - Blog post about anti-virus evasion techniques for malware
-  
+  * [Sandbox detection and evasion techniques](https://www.ptsecurity.com/ww-en/analytics/antisandbox-techniques/) - Research that shows how sandbox evasion techniques have evolved in the last 10 years.
+
 ## Disclaimer
 
 Usage of this tool for attacking targets without prior mutual consent is illegal.
