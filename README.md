@@ -26,7 +26,7 @@ Only used for educational purposes. See disclaimer below.
 * [x] Server to client file transfer
 * [x] Persistence
 * [x] Encrypt messages
-* [ ] Anti-debugging
+* [x] Anti-debugging
 * [ ] Anti-emulation/Anti-sandbox
 * [ ] and more... (?)
 
