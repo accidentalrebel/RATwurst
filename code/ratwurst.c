@@ -477,6 +477,12 @@ IsInSandbox(void)
 				OutputDebugStringA(processName);
 				OutputDebugStringA("\n");
 #endif
+				if ( 0 == strcmp(processName, "vmtoolsd")
+					 || 0 == strcmp(processName, "vbox.exe") )
+				{
+					return 1;
+				}
+				
 			}
 			else
 			{
