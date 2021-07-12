@@ -440,6 +440,51 @@ WinMain(HINSTANCE hInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
+	DWORD processList[1024];
+	DWORD cbNeeded;
+	DWORD numProcesses;
+
+	if ( !EnumProcesses(processList, sizeof(processList), &cbNeeded) )
+	{
+		return 1;
+	}
+	numProcesses = cbNeeded / sizeof(DWORD);
+	for ( unsigned int i = 0 ; i < numProcesses ; i++ )
+	{
+		DWORD processId = processList[i];
+		if ( processId == 0 )
+		{
+			continue;
+		}
+
+		HANDLE processHandle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+									   FALSE, processId);
+		if ( NULL != processHandle )
+		{
+			HMODULE hModule;
+			DWORD cbNeeded;
+
+			if ( EnumProcessModules( processHandle, &hModule, sizeof(hModule), &cbNeeded) )
+			{
+				char processName[MAX_PATH];
+				GetModuleBaseNameA( processHandle, hModule, processName, sizeof(processName)/sizeof(char));
+
+				OutputDebugStringA(processName);
+				OutputDebugStringA("\n");
+			}
+			else
+			{
+				
+			}
+		}
+		else
+		{
+
+		}
+	}
+	
+	return 0;
+	
  	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
 	
@@ -457,7 +502,6 @@ WinMain(HINSTANCE hInstance,
 	_QueryPerformanceCounter* f_QueryPerformanceCounter = (_QueryPerformanceCounter*)GetProcAddress(gLibraryKernel32, ca_QueryPerformanceCounter);
 	f_QueryPerformanceCounter(&performanceCounterStart);
 #endif	
-	
 	
 	char currentPath[MAX_PATH];
 	if ( GetModuleFileNameA(NULL, currentPath, MAX_PATH) == 0 )
