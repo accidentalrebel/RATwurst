@@ -1,7 +1,7 @@
 
 
 #include "ratwurst.h"
-#include "tools.cpp"
+#include "tools.c"
 
 #define global static
 #define CRYPT_KEY 33
