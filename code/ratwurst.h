@@ -1,8 +1,15 @@
 #ifndef __RATWURST_H__
-#define __RATWURST_H__
+#define __RATWURST_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <winsock2.h>
+#include <Windows.h>
+#include <string.h>
+#include <time.h>
 
 typedef SOCKET WSAAPI _socket(int af, int type, int protocol);
-typedef int WSAAPI _connect(SOCKET s, const sockaddr *name, int namelen);
+typedef int WSAAPI _connect(SOCKET s, const SOCKADDR *name, int namelen);
 typedef int WSAAPI _send(SOCKET s, const char *buf, int len, int flags);
 typedef int WSAAPI _closesocket(SOCKET s);
 typedef u_short _htons(u_short hostshort);

