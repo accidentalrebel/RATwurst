@@ -35,6 +35,10 @@ typedef LSTATUS _RegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions, REGS
 typedef LSTATUS _RegSetValueExA(HKEY hKey, LPCSTR lpValueName, DWORD Reserved, DWORD dwType, const BYTE *lpData, DWORD cbData);
 typedef BOOL _QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency);
 typedef BOOL _QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount);
+typedef BOOL _EnumProcesses(DWORD *lpidProcess, DWORD cb, LPDWORD lpcbNeeded);
+typedef HANDLE _OpenProcess(DWORD dwDesiredAccess, BOOL  bInheritHandle, DWORD dwProcessId);
+typedef BOOL _EnumProcessModules(HANDLE hProcess, HMODULE *lphModule, DWORD cb, LPDWORD lpcbNeeded);
+typedef DWORD _GetModuleBaseNameA(HANDLE hProcess, HMODULE hModule, LPSTR lpBaseName, DWORD nSize);
 
 #define SOCKET_BUFFER_SIZE 256
 #define SPLIT_STRING_ARRAY_SIZE MAX_PATH

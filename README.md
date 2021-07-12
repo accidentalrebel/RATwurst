@@ -14,6 +14,7 @@ Only used for educational purposes. See disclaimer below.
 * Anti-virus evasion via simple strings obfuscation
 * Deletes itself and runs from temporary folder
 * Anti-debugging via rdtsc timing
+* Anti-sandbox via process enumeration
 
 ## TODOs
 
@@ -27,7 +28,7 @@ Only used for educational purposes. See disclaimer below.
 * [x] Persistence
 * [x] Encrypt messages
 * [x] Anti-debugging
-* [ ] Anti-emulation/Anti-sandbox
+* [x] Anti-emulation/Anti-sandbox
 * [ ] and more... (?)
 
 ## How to build
