@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <string.h>
 #include <time.h>
+#include <psapi.h>
 
 typedef SOCKET WSAAPI _socket(int af, int type, int protocol);
 typedef int WSAAPI _connect(SOCKET s, const SOCKADDR *name, int namelen);

