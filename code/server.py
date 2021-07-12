@@ -10,7 +10,7 @@ HOST = "127.0.0.1"
 PORT = 65432
 UPLOAD_DIRECTORY = "X:\\tmp\\"
 
-CRYPT_KEY = 33
+CRYPT_KEY = 28
 FILE_SIZE_DIGIT_SIZE = 8
 SOCKET_BUFFER_SIZE = 256
 
@@ -190,7 +190,10 @@ class ServerShell(cmd.Cmd):
             f = open(targetPath, "rb")
 
             fileSize = os.stat(targetPath).st_size
+            print("## fileSize: " + str(fileSize))
             fileSizeStr = str(fileSize).rjust(8, '0')
+            print("## fileSizeStr: " + fileSizeStr)
+            
             client.connection.send(EncryptDecryptString(fileSizeStr.encode()))
 
             if f:
@@ -200,7 +203,11 @@ class ServerShell(cmd.Cmd):
                     readData = f.read(SOCKET_BUFFER_SIZE)
                     if len(readData) <= 0 or readData == None:
                         break
-                    client.connection.send(EncryptDecryptString(readData))
+
+                    print("## READ DATA: " + str(readData))
+                    toSend = EncryptDecryptString(readData)
+                    print("## TO SEND: " + str(toSend))
+                    client.connection.send(toSend)
 
                 print("[INFO] DONE SENDING ALL DATA")
 
