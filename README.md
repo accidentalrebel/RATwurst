@@ -2,6 +2,10 @@
 
 ![logo](https://github.com/accidentalrebel/RATwurst/raw/master/images/ratwurst.png)
 
+Windows-only Remote Access Tool (RAT) with anti-debugging and anti-sandbox checks. For educational purposes only. 
+
+## The reason behind this project
+
 The aim of this project is for me to learn about the techniques used by malware by making a Remote Access Tool.
 
 The more I understand the inner workings of malware and the reasoning behind how they were built, the better I can protect against them.
