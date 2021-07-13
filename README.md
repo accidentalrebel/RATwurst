@@ -8,6 +8,11 @@ The more I understand the inner workings of malware and the reasoning behind how
 
 Only used for educational purposes. See disclaimer below.
 
+I've also written about this project [here](https://www.accidentalrebel.com/making-a-rat.html).
+
+![screen1](https://github.com/accidentalrebel/RATwurst/raw/master/images/screen1.png)
+![screen2](https://github.com/accidentalrebel/RATwurst/raw/master/images/screen2.png)
+
 ## Noteworthy features (so far)
 
 * Runtime loading of DLLs
