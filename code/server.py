@@ -190,9 +190,7 @@ class ServerShell(cmd.Cmd):
             f = open(targetPath, "rb")
 
             fileSize = os.stat(targetPath).st_size
-            print("## fileSize: " + str(fileSize))
             fileSizeStr = str(fileSize).rjust(8, '0')
-            print("## fileSizeStr: " + fileSizeStr)
             
             client.connection.send(EncryptDecryptString(fileSizeStr.encode()))
 
@@ -204,9 +202,7 @@ class ServerShell(cmd.Cmd):
                     if len(readData) <= 0 or readData == None:
                         break
 
-                    print("## READ DATA: " + str(readData))
                     toSend = EncryptDecryptString(readData)
-                    print("## TO SEND: " + str(toSend))
                     client.connection.send(toSend)
 
                 print("[INFO] DONE SENDING ALL DATA")
